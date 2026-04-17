@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1><a class="brand-link" href="index.html">Dextra</a></h1>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a href="index.html#hero">Home</a>
+          <a href="index.html#team">Meet the Team</a>
+          <a href="index.html#info">Information</a>
+          <a href="index.html#programs">Programs</a>
+          <a href="index.html#contact">Contact Us</a>
+        </nav>
+        <div class="header-actions">
+          <a class="button secondary header-auth" href="sign-in.html">Sign In</a>
+          <a class="button primary header-auth" href="sign-up.html">Sign Up</a>
+        </div>
+      </header>
+
+      <main class="auth-page">
+        <section class="auth-hero">
+          <p class="eyebrow">Plans and Access</p>
+          <h2>Create your Dextra account</h2>
+          <div class="ad-placeholder-banner">
+            <p>To put your ad here, contact us at dextra@gmail.org</p>
+          </div>
+        </section>
+
+        <section class="pricing-grid">
+          <button class="plan-card selected" type="button" data-plan="free">
+            <span class="plan-kicker">Free Plan</span>
+            <h3>Free</h3>
+            <p class="plan-price">$0 / month</p>
+            <ul class="plan-list">
+              <li>General tips</li>
+              <li>Key terms</li>
+              <li>Personalized tests</li>
+              <li>KPI guide</li>
+            </ul>
+          </button>
+          <button class="plan-card" type="button" data-plan="single">
+            <span class="plan-kicker">Personal Plan</span>
+            <h3>Personal</h3>
+            <p class="plan-price">$4.99 / month</p>
+            <ul class="plan-list">
+              <li>AI roleplay grading</li>
+              <li>Advanced testing problems</li>
+              <li>Prepared event penalty point checks</li>
+            </ul>
+          </button>
+          <button class="plan-card" type="button" data-plan="small">
+            <span class="plan-kicker">Small Club Plan</span>
+            <h3>Small Club</h3>
+            <p class="plan-price">$3.99 / month</p>
+            <ul class="plan-list">
+              <li>AI roleplay grading</li>
+              <li>Advanced testing problems</li>
+              <li>Prepared event penalty point checks</li>
+              <li>Free advisor account included</li>
+            </ul>
+          </button>
+          <button class="plan-card" type="button" data-plan="big">
+            <span class="plan-kicker">Big Club Plan</span>
+            <h3>Big Club</h3>
+            <p class="plan-price">$3.49 / month</p>
+            <ul class="plan-list">
+              <li>AI roleplay grading</li>
+              <li>Advanced testing problems</li>
+              <li>Prepared event penalty point checks</li>
+              <li>Free advisor account included</li>
+            </ul>
+          </button>
+        </section>
+
+        <section class="auth-panel standalone-panel full-auth-panel">
+          <div class="auth-glow"></div>
+          <div class="auth-header">
+            <p class="eyebrow">Create Account</p>
+            <h3>Start a New Account</h3>
+            <p id="selectedPlanText">Selected plan: Free.</p>
+            <p class="price-summary" id="priceSummary">Current total: $0.00 / month</p>
+          </div>
+          <form class="auth-form" id="signUpForm" novalidate>
+            <div class="field-row">
+              <label for="signUpName">Full Name</label>
+              <input id="signUpName" type="text" placeholder="Jordan Lee" required />
+            </div>
+            <div class="field-row">
+              <label for="signUpEmail">Email</label>
+              <input id="signUpEmail" type="email" placeholder="you@school.edu" required />
+            </div>
+            <div class="field-row hidden" id="clubNameRow">
+              <label for="clubName">Club Name</label>
+              <input id="clubName" type="text" placeholder="Westview DECA" />
+            </div>
+            <div class="field-row">
+              <label for="signUpPassword">Password</label>
+              <div class="password-field">
+                <input
+                  id="signUpPassword"
+                  type="password"
+                  placeholder="Minimum 8 characters"
+                  required
+                />
+                <button
+                  class="password-toggle"
+                  type="button"
+                  data-toggle-password="signUpPassword"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                >
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div class="field-row">
+              <label for="signUpConfirmPassword">Retype Password</label>
+              <div class="password-field">
+                <input
+                  id="signUpConfirmPassword"
+                  type="password"
+                  placeholder="Retype your password"
+                  required
+                />
+                <button
+                  class="password-toggle"
+                  type="button"
+                  data-toggle-password="signUpConfirmPassword"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                >
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div class="field-row hidden" id="accountCountRow">
+              <label for="accountCount">How many accounts do you want to purchase?</label>
+              <input id="accountCount" type="number" min="1" step="1" placeholder="Enter a number" />
+            </div>
+            <button class="button primary submit-button" type="submit">Create Account</button>
+            <p class="form-status" id="signUpStatus" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <div class="join-class-link-row">
+          <a class="join-class-link" href="join-class.html">Join a Class with an Advisor Code</a>
+        </div>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="auth.js?v=20260416e"></script>
+  </body>
+</html>

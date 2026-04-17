@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | Join a Class</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1><a class="brand-link" href="index.html">Dextra</a></h1>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a href="index.html#hero">Home</a>
+          <a href="index.html#team">Meet the Team</a>
+          <a href="index.html#info">Information</a>
+          <a href="index.html#programs">Programs</a>
+          <a href="index.html#contact">Contact Us</a>
+        </nav>
+        <div class="header-actions">
+          <a class="button secondary header-auth" href="sign-in.html">Sign In</a>
+          <a class="button primary header-auth" href="sign-up.html">Sign Up</a>
+        </div>
+      </header>
+
+      <main class="auth-page">
+        <section class="auth-hero">
+          <p class="eyebrow">Class Access</p>
+          <h2>Join a Class</h2>
+          <p class="hero-tagline">
+            Enter your advisor code to join a small club or big club plan.
+          </p>
+        </section>
+
+        <section class="auth-panel standalone-panel full-auth-panel">
+          <div class="auth-glow"></div>
+          <div class="auth-header">
+            <p class="eyebrow">Join a Class</p>
+            <h3>Use an Advisor Code</h3>
+            <p>Enter your 8 character code to join a class.</p>
+          </div>
+          <form class="auth-form" id="joinClassForm" novalidate>
+            <div class="field-row">
+              <label for="joinCode">8 Character Code</label>
+              <input id="joinCode" type="text" placeholder="aB3$kL!2" maxlength="8" required />
+            </div>
+            <div class="field-row">
+              <label for="joinName">Full Name</label>
+              <input id="joinName" type="text" placeholder="Student name" required />
+            </div>
+            <div class="field-row">
+              <label for="joinEmail">Email</label>
+              <input id="joinEmail" type="email" placeholder="student@school.edu" required />
+            </div>
+            <div class="field-row">
+              <label for="joinPassword">Password</label>
+              <div class="password-field">
+                <input id="joinPassword" type="password" placeholder="Minimum 8 characters" required />
+                <button
+                  class="password-toggle"
+                  type="button"
+                  data-toggle-password="joinPassword"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                >
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div class="field-row">
+              <label for="joinConfirmPassword">Retype Password</label>
+              <div class="password-field">
+                <input
+                  id="joinConfirmPassword"
+                  type="password"
+                  placeholder="Retype your password"
+                  required
+                />
+                <button
+                  class="password-toggle"
+                  type="button"
+                  data-toggle-password="joinConfirmPassword"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                >
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <button class="button secondary submit-button" type="submit">Join Class</button>
+            <p class="form-status" id="joinClassStatus" aria-live="polite"></p>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="auth.js?v=20260416e"></script>
+  </body>
+</html>

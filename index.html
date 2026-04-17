@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | DECA Chapter Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1>Dextra</h1>
+        </div>
+        <nav class="top-nav" id="publicNav" aria-label="Primary">
+          <a href="#hero">Home</a>
+          <a href="#team">Meet the Team</a>
+          <a href="#info">Information</a>
+          <a href="#programs">Programs</a>
+          <a href="#contact">Contact Us</a>
+        </nav>
+        <div class="header-actions">
+          <a class="button secondary header-auth" id="headerSignIn" href="sign-in.html">Sign In</a>
+          <a class="button primary header-auth" id="headerSignUp" href="sign-up.html">Sign Up</a>
+          <a class="profile-link hidden" id="profileLink" href="profile.html" aria-label="Open profile">
+            <span class="profile-icon" aria-hidden="true"></span>
+          </a>
+          <button class="button secondary header-auth hidden" id="signOutButton" type="button">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <div id="publicContent">
+          <section class="hero-banner" id="hero">
+            <p class="eyebrow">DECA-style chapter site</p>
+            <h2>Dextra</h2>
+            <p class="hero-tagline">the right way to do it</p>
+          </section>
+
+          <section class="content-layout single-column">
+            <section class="info-grid" id="info">
+              <article class="panel feature-panel">
+                <p class="eyebrow">Information</p>
+                <h3>What Dextra offers</h3>
+                <p>
+                  Structured prep sessions, chapter projects, competition support,
+                  and practical business experience without the clutter.
+                </p>
+              </article>
+              <article class="panel">
+                <p class="eyebrow">Why Join</p>
+                <h3>Built for serious members</h3>
+                <p>
+                  Dextra is organized around consistency, preparation, and real
+                  outcomes for members who want to compete and lead well.
+                </p>
+              </article>
+              <article class="panel">
+                <p class="eyebrow">Calendar</p>
+                <h3>Simple weekly structure</h3>
+                <p>
+                  Workshop sessions, project time, and prep blocks are arranged so
+                  members always know what comes next.
+                </p>
+              </article>
+            </section>
+          </section>
+
+          <section class="team-section" id="team">
+            <div class="section-heading">
+              <p class="eyebrow">Meet the Team</p>
+              <h3>The people behind Dextra</h3>
+            </div>
+            <div class="team-grid compact">
+              <article class="team-card">
+                <img class="team-photo" src="assets/team/ethan-chen.jpg" alt="Ethan Chen" />
+                <h4>Ethan Chen</h4>
+              </article>
+              <article class="team-card">
+                <img class="team-photo" src="assets/team/ethan-hao.jpg" alt="Ethan Hao" />
+                <h4>Ethan Hao</h4>
+              </article>
+              <article class="team-card">
+                <img class="team-photo" src="assets/team/jacob-cao.jpg" alt="Jacob Cao" />
+                <h4>Jacob Cao</h4>
+              </article>
+            </div>
+          </section>
+
+          <section class="programs-section" id="programs">
+            <div class="section-heading">
+              <p class="eyebrow">Programs</p>
+              <h3>Paths members can plug into quickly</h3>
+            </div>
+            <div class="programs-grid">
+              <article class="program-card">
+                <h4>Competition Track</h4>
+                <p>Weekly coaching for roleplays, presentations, and written events.</p>
+              </article>
+              <article class="program-card">
+                <h4>Leadership Lab</h4>
+                <p>Officer shadowing, event ownership, and public speaking practice.</p>
+              </article>
+              <article class="program-card">
+                <h4>Career Network</h4>
+                <p>Alumni Q&As, local business partners, and internship preparation.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="contact-section" id="contact">
+            <div class="section-heading">
+              <p class="eyebrow">Contact Us</p>
+              <h3>Reach the chapter team</h3>
+            </div>
+            <div class="contact-layout">
+              <div class="panel contact-panel">
+                <p>Email: hello@dextrachapter.org</p>
+                <p>Instagram: @dextra.deca</p>
+                <p>Meetings: Thursdays, 4:00 PM, Business Building Room 204</p>
+              </div>
+              <form class="panel contact-form">
+                <label for="contactName">Name</label>
+                <input id="contactName" type="text" placeholder="Your name" />
+                <label for="contactEmail">Email</label>
+                <input id="contactEmail" type="email" placeholder="Your email" />
+                <label for="contactMessage">Message</label>
+                <textarea id="contactMessage" rows="4" placeholder="How can we help?"></textarea>
+                <button type="button" class="button secondary">Send Message</button>
+              </form>
+            </div>
+          </section>
+        </div>
+
+        <div class="learning-hub hidden" id="learningHub">
+          <section class="section-heading" data-tab-panel="testing" id="testing">
+            <p class="eyebrow">Testing</p>
+            <h3>Pick a Category and Start Learning</h3>
+          </section>
+          <div class="learning-toolbar" data-tab-panel="testing">
+            <label class="search-shell" for="testingSearch">
+              <span class="search-label">Search Testing</span>
+              <input id="testingSearch" type="search" placeholder="Search testing categories" />
+            </label>
+          </div>
+          <section class="category-grid" data-tab-panel="testing" id="testingGrid"></section>
+
+          <section class="section-heading hidden" data-tab-panel="roleplays" id="roleplays">
+            <p class="eyebrow">Roleplays</p>
+            <h3>Roleplay and Case Event Tracks</h3>
+          </section>
+          <div class="learning-toolbar hidden" data-tab-panel="roleplays">
+            <div class="subtab-row" id="roleplaySubtabs" aria-label="Roleplay groups"></div>
+            <label class="search-shell" for="roleplaySearch">
+              <span class="search-label">Search Roleplays</span>
+              <input id="roleplaySearch" type="search" placeholder="Search roleplay events" />
+            </label>
+          </div>
+          <section class="category-grid hidden" data-tab-panel="roleplays" id="roleplayGrid"></section>
+
+          <section class="section-heading hidden" data-tab-panel="prepared" id="prepared">
+            <p class="eyebrow">Prepared Events</p>
+            <h3>Prepared Event Formats</h3>
+          </section>
+          <div class="learning-toolbar hidden" data-tab-panel="prepared">
+            <label class="search-shell" for="preparedSearch">
+              <span class="search-label">Search Prepared Events</span>
+              <input id="preparedSearch" type="search" placeholder="Search prepared event formats" />
+            </label>
+          </div>
+          <section class="category-grid hidden" data-tab-panel="prepared" id="writtenGrid"></section>
+        </div>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="learning-data.js?v=20260417a"></script>
+    <script src="script.js?v=20260417a"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "name": "Single Plan User",
+      "email": "123@gmail.com",
+      "password": "12345678",
+      "plan": "single",
+      "role": "member",
+      "testsTaken": 0,
+      "roleplaysDone": 0,
+      "writtensGraded": 0
+    }
+  ],
+  "clubs": [],
+  "confirmation": null
+}

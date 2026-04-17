@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1><a class="brand-link" href="index.html">Dextra</a></h1>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a href="index.html#hero">Home</a>
+          <a href="index.html#team">Meet the Team</a>
+          <a href="index.html#info">Information</a>
+          <a href="index.html#programs">Programs</a>
+          <a href="index.html#contact">Contact Us</a>
+        </nav>
+        <div class="header-actions">
+          <a class="profile-link" href="profile.html" aria-label="Open profile">
+            <span class="profile-icon" aria-hidden="true"></span>
+          </a>
+          <button class="button secondary header-auth" id="profileSignOutButton" type="button">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <main class="profile-page">
+        <section class="section-heading">
+          <p class="eyebrow">Your Account</p>
+          <h3 id="profileHeading">Profile</h3>
+        </section>
+
+        <section class="stats-grid">
+          <article class="panel stat-card">
+            <p class="eyebrow">Tests Taken</p>
+            <h3 id="testsTakenValue">0</h3>
+          </article>
+          <article class="panel stat-card">
+            <p class="eyebrow">Roleplays Done</p>
+            <h3 id="roleplaysDoneValue">0</h3>
+          </article>
+          <article class="panel stat-card">
+            <p class="eyebrow">Writtens Graded</p>
+            <h3 id="writtensGradedValue">0</h3>
+          </article>
+        </section>
+
+        <section class="panel profile-panel" id="studentPanel">
+          <p class="eyebrow">Student Info</p>
+          <h3>Your class</h3>
+          <p id="studentClassText">No class assigned.</p>
+        </section>
+
+        <section class="panel profile-panel hidden" id="advisorPanel">
+          <p class="eyebrow">Advisor Info</p>
+          <h3>Your class roster</h3>
+          <p id="advisorSeatsText">0 of 0 slots filled.</p>
+          <div class="search-row">
+            <label class="sr-only" for="studentSearch">Search students</label>
+            <input id="studentSearch" type="text" placeholder="Search students by name" />
+          </div>
+          <div class="student-list" id="studentList"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="profile.js?v=20260416e"></script>
+  </body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | Roleplay Review</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1><a class="brand-link" href="index.html">Dextra</a></h1>
+        </div>
+        <nav class="top-nav" aria-label="Signed in primary">
+          <a href="index.html#testing">Testing</a>
+          <a href="index.html#roleplays">Roleplays</a>
+          <a href="index.html#prepared">Prepared Events</a>
+        </nav>
+        <div class="header-actions">
+          <a class="profile-link" href="profile.html" aria-label="Open profile">
+            <span class="profile-icon" aria-hidden="true"></span>
+          </a>
+          <button class="button secondary header-auth" id="roleplaySignOutButton" type="button">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <main class="prepared-review-page">
+        <section class="section-heading">
+          <p class="eyebrow">Roleplays</p>
+          <h3 id="roleplayReviewTitle">Roleplay Review</h3>
+          <p class="roadmap-copy" id="roleplayReviewCopy"></p>
+        </section>
+
+        <section class="prepared-review-layout">
+          <div class="panel upload-panel">
+            <input class="hidden" id="roleplayFileInput" type="file" />
+            <button class="upload-dropzone" id="roleplayDropzone" type="button">
+              <span class="upload-dropzone-label" id="roleplayDropzoneLabel">Drop your roleplay file here</span>
+              <span class="upload-dropzone-copy">
+                Drag and drop your roleplay notes, prep outline, or script here, or click to browse.
+              </span>
+              <span class="upload-file-meta" id="roleplayFileMeta">No file selected</span>
+            </button>
+          </div>
+
+          <aside class="panel upload-actions-panel">
+            <p class="eyebrow" id="roleplayActionEyebrow">Roleplay Review</p>
+            <h3 id="roleplayActionTitle">Grade Roleplay</h3>
+            <p id="roleplayActionCopy">
+              Upload your roleplay file and run a grading pass for structure, clarity, and event alignment.
+            </p>
+            <button class="button primary review-button" id="roleplayGradeButton" type="button">
+              Grade Roleplay
+            </button>
+            <p class="form-status" id="roleplayReviewStatus"></p>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="learning-data.js?v=20260417a"></script>
+    <script src="roleplay-review.js?v=20260417a"></script>
+  </body>
+</html>

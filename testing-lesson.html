@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | Lesson</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1><a class="brand-link" href="index.html">Dextra</a></h1>
+        </div>
+        <nav class="top-nav" aria-label="Signed in primary">
+          <a href="index.html#testing">Testing</a>
+          <a href="index.html#roleplays">Roleplays</a>
+          <a href="index.html#writtens">Writtens</a>
+        </nav>
+        <div class="header-actions">
+          <a class="profile-link" href="profile.html" aria-label="Open profile">
+            <span class="profile-icon" aria-hidden="true"></span>
+          </a>
+          <button class="button secondary header-auth" id="lessonSignOutButton" type="button">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <main class="lesson-page">
+        <section class="section-heading">
+          <p class="eyebrow" id="lessonCategoryCode">Lesson</p>
+          <h3 id="lessonTitle">Lesson</h3>
+          <p class="roadmap-copy" id="lessonMeta"></p>
+        </section>
+
+        <section class="panel lesson-panel">
+          <div class="progress-line">
+            <span id="lessonProgressLabel">Question 1 of 20</span>
+            <div class="progress-track">
+              <div class="progress-fill" id="lessonProgressFill"></div>
+            </div>
+          </div>
+
+          <article class="term-intro" id="termIntro"></article>
+
+          <div class="question-block">
+            <h3 id="questionPrompt">Question</h3>
+            <div class="choice-grid" id="choiceGrid"></div>
+          </div>
+
+          <div class="lesson-feedback" id="lessonFeedback"></div>
+
+          <div class="lesson-actions">
+            <button class="button primary" id="nextQuestionButton" type="button">Next Question</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="learning-data.js?v=20260416e"></script>
+    <script src="testing-lesson.js?v=20260416e"></script>
+  </body>
+</html>

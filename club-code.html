@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dextra | Club Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260417a" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-mark">
+          <h1><a class="brand-link" href="index.html">Dextra</a></h1>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a href="index.html#hero">Home</a>
+          <a href="index.html#team">Meet the Team</a>
+          <a href="index.html#info">Information</a>
+          <a href="index.html#programs">Programs</a>
+          <a href="index.html#contact">Contact Us</a>
+        </nav>
+        <div class="header-actions">
+          <a class="button secondary header-auth" href="sign-in.html">Sign In</a>
+          <a class="button primary header-auth" href="sign-up.html">Sign Up</a>
+        </div>
+      </header>
+
+      <main class="auth-page">
+        <section class="auth-hero">
+          <p class="eyebrow">Purchase Complete</p>
+          <h2>Your club code</h2>
+          <p class="hero-tagline">Use this code for student class signups.</p>
+        </section>
+
+        <section class="auth-panel standalone-panel confirmation-panel">
+          <div class="auth-glow"></div>
+          <div class="auth-header">
+            <p class="eyebrow" id="confirmationPlan">Club Plan</p>
+            <h3 id="confirmationTitle">Advisor account created</h3>
+            <p id="confirmationSummary">Your code and seat count are shown below.</p>
+          </div>
+          <div class="code-display" id="confirmationCode">--------</div>
+          <div class="confirmation-metrics">
+            <p id="confirmationSeats">Seats: 0</p>
+            <p id="confirmationPrice">Monthly total: $0.00</p>
+          </div>
+          <div class="hero-cta-row">
+            <a class="button primary" href="index.html">Go To Home</a>
+            <a class="button secondary" href="sign-up.html">Create Another Plan</a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="reset-seed.js?v=20260415seed"></script>
+    <script src="feedback-modal.js?v=20260416h"></script>
+    <script src="auth.js?v=20260416e"></script>
+  </body>
+</html>
