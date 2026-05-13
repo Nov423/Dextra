@@ -155,7 +155,6 @@ function bindHomeSession() {
   const upcomingEventsList = document.getElementById("upcomingEventsList");
   const recentRoleplaysList = document.getElementById("recentRoleplaysList");
   const radarStage = document.getElementById("testingRadarStage");
-  const radarLegend = document.getElementById("testingRadarLegend");
   const tabButtons = document.querySelectorAll("[data-tab-target]");
   const tabSections = document.querySelectorAll("[data-tab-panel]");
 
@@ -258,17 +257,6 @@ function bindHomeSession() {
 
       radarStage.append(point, label);
     });
-
-    radarLegend.innerHTML = categories
-      .map(
-        (category) => `
-          <article class="radar-legend-row">
-            <strong>${category.code}</strong>
-            <span>${category.title}</span>
-          </article>
-        `
-      )
-      .join("");
   }
 
   function activateTab(tabName) {
