@@ -121,30 +121,16 @@ function bindLesson() {
   const choiceGrid = document.getElementById("choiceGrid");
   const feedbackNode = document.getElementById("lessonFeedback");
   const nextButton = document.getElementById("nextQuestionButton");
-  const progressLabel = document.getElementById("lessonProgressLabel");
-  const progressFill = document.getElementById("lessonProgressFill");
 
   document.getElementById("lessonCategoryCode").textContent = category.code;
   document.getElementById("lessonTitle").textContent = lesson.virtualTitle;
-  document.getElementById("lessonMeta").textContent = `${chapter.title} • 20 adaptive questions`;
-  document.getElementById("termIntro").innerHTML = lesson.terms
-    .map(
-      (item) => `
-        <article class="term-chip">
-          <strong>${item.term}</strong>
-          <span>${item.definition}</span>
-        </article>
-      `
-    )
-    .join("");
+  document.getElementById("lessonMeta").textContent = chapter.title;
 
   function renderQuestion() {
     const question = questions[currentQuestionIndex];
     selectedAnswer = null;
     promptNode.textContent = question.prompt;
     feedbackNode.textContent = "";
-    progressLabel.textContent = `Question ${currentQuestionIndex + 1} of 20`;
-    progressFill.style.width = `${((currentQuestionIndex + 1) / 20) * 100}%`;
     nextButton.textContent = currentQuestionIndex === 19 ? "Finish Lesson" : "Next Question";
     nextButton.disabled = true;
 

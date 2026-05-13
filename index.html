@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260417a" />
+    <link rel="stylesheet" href="styles.css?v=20260417g" />
   </head>
   <body>
     <div class="page-shell">
@@ -141,6 +141,31 @@
         </div>
 
         <div class="learning-hub hidden" id="learningHub">
+          <section class="dashboard-shell">
+            <article class="panel dashboard-card dashboard-events">
+              <p class="eyebrow">Upcoming Events</p>
+              <h3>Competition Calendar</h3>
+              <div class="event-list" id="upcomingEventsList"></div>
+            </article>
+
+            <article class="panel dashboard-card dashboard-radar">
+              <p class="eyebrow">Testing Progress</p>
+              <h3>Category Radar</h3>
+              <div class="radar-layout">
+                <div class="radar-stage" id="testingRadarStage" aria-label="Testing progress radar chart">
+                  <img class="radar-base-image" src="assets/category-icons/chart-radar.svg" alt="" aria-hidden="true" />
+                </div>
+                <div class="radar-legend" id="testingRadarLegend"></div>
+              </div>
+            </article>
+
+            <article class="panel dashboard-card dashboard-recent">
+              <p class="eyebrow">Recent Roleplays</p>
+              <h3>Most Recently Practiced</h3>
+              <div class="recent-roleplay-list" id="recentRoleplaysList"></div>
+            </article>
+          </section>
+
           <section class="section-heading" data-tab-panel="testing" id="testing">
             <p class="eyebrow">Testing</p>
             <h3>Pick a Category and Start Learning</h3>
@@ -183,7 +208,7 @@
 
     <script src="reset-seed.js?v=20260415seed"></script>
     <script src="feedback-modal.js?v=20260416h"></script>
-    <script src="learning-data.js?v=20260417a"></script>
-    <script src="script.js?v=20260417a"></script>
+    <script src="learning-data.js?v=20260417g"></script>
+    <script src="script.js?v=20260417g"></script>
   </body>
 </html>

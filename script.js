@@ -1,4 +1,5 @@
 const SESSION_KEY = "dextraCurrentUser";
+const USERS_KEY = "dextraUsers";
 
 function getCurrentUser() {
   try {
@@ -6,6 +7,25 @@ function getCurrentUser() {
   } catch {
     return null;
   }
+}
+
+function getUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function normalizeUser(user) {
+  return {
+    testsTaken: 0,
+    roleplaysDone: 0,
+    writtensGraded: 0,
+    testingProgress: {},
+    recentRoleplays: [],
+    ...user,
+  };
 }
 
 function matchesSearch(item, query) {
@@ -108,6 +128,9 @@ function bindHomeSession() {
   signOutButton.classList.remove("hidden");
   signInButton.classList.add("hidden");
   signUpButton.classList.add("hidden");
+  const fullUser = getUsers()
+    .map(normalizeUser)
+    .find((entry) => entry.email?.toLowerCase() === user.email?.toLowerCase()) || normalizeUser(user);
   publicNav.innerHTML = `
     <a href="#testing" data-tab-target="testing">Testing</a>
     <a href="#roleplays" data-tab-target="roleplays">Roleplays</a>
@@ -129,10 +152,124 @@ function bindHomeSession() {
   const testingSearch = document.getElementById("testingSearch");
   const roleplaySearch = document.getElementById("roleplaySearch");
   const preparedSearch = document.getElementById("preparedSearch");
+  const upcomingEventsList = document.getElementById("upcomingEventsList");
+  const recentRoleplaysList = document.getElementById("recentRoleplaysList");
+  const radarStage = document.getElementById("testingRadarStage");
+  const radarLegend = document.getElementById("testingRadarLegend");
   const tabButtons = document.querySelectorAll("[data-tab-target]");
   const tabSections = document.querySelectorAll("[data-tab-panel]");
 
   let activeRoleplayGroup = DEXTRA_LEARNING_DATA.roleplayGroups[0]?.id || "team";
+
+  function getCategoryProgress(category) {
+    const categoryProgress = fullUser.testingProgress?.[category.id];
+    if (!categoryProgress) {
+      return 0;
+    }
+
+    const totalLessons = Math.max(1, category.chapters.length * 10);
+    return Math.min(1, (categoryProgress.completedLessons?.length || 0) / totalLessons);
+  }
+
+  function renderUpcomingEvents() {
+    const events = [
+      {
+        title: "California SCDC",
+        detail: "State-level prep checkpoint for roleplays, prepared events, and testing.",
+      },
+      {
+        title: "ICDC",
+        detail: "Final competition push with presentation, performance, and testing review.",
+      },
+    ];
+
+    upcomingEventsList.innerHTML = events
+      .map(
+        (event) => `
+          <article class="event-row">
+            <strong>${event.title}</strong>
+            <span>${event.detail}</span>
+          </article>
+        `
+      )
+      .join("");
+  }
+
+  function renderRecentRoleplays() {
+    const recentIds = fullUser.recentRoleplays?.slice(0, 4) || [];
+    const items = recentIds
+      .map((id) => DEXTRA_LEARNING_DATA.roleplays.find((entry) => entry.id === id))
+      .filter(Boolean);
+
+    if (!items.length) {
+      const fallbackIds = ["pmk", "bltdm", "ftdm", "bl074"];
+      fallbackIds.forEach((id) => {
+        const item = DEXTRA_LEARNING_DATA.roleplays.find((entry) => entry.id === id);
+        if (item) {
+          items.push(item);
+        }
+      });
+    }
+
+    recentRoleplaysList.innerHTML = items
+      .map(
+        (item) => `
+          <article class="recent-roleplay-row">
+            <strong>${item.title}</strong>
+            <span>${item.name}</span>
+          </article>
+        `
+      )
+      .join("");
+  }
+
+  function renderRadarChart() {
+    if (!radarStage) {
+      return;
+    }
+
+    const categories = DEXTRA_LEARNING_DATA.testingCategories;
+    radarStage.querySelectorAll(".radar-point, .radar-label").forEach((node) => node.remove());
+
+    const centerX = 50;
+    const centerY = 50;
+    const radius = 33;
+
+    categories.forEach((category, index) => {
+      const value = getCategoryProgress(category);
+      const angle = (-Math.PI / 2) + (index / categories.length) * Math.PI * 2;
+      const pointRadius = Math.max(7, radius * value);
+      const x = centerX + Math.cos(angle) * pointRadius;
+      const y = centerY + Math.sin(angle) * pointRadius;
+      const labelX = centerX + Math.cos(angle) * 45;
+      const labelY = centerY + Math.sin(angle) * 45;
+
+      const point = document.createElement("span");
+      point.className = "radar-point";
+      point.style.left = `${x}%`;
+      point.style.top = `${y}%`;
+      point.title = category.title;
+
+      const label = document.createElement("span");
+      label.className = "radar-label";
+      label.style.left = `${labelX}%`;
+      label.style.top = `${labelY}%`;
+      label.textContent = category.code;
+
+      radarStage.append(point, label);
+    });
+
+    radarLegend.innerHTML = categories
+      .map(
+        (category) => `
+          <article class="radar-legend-row">
+            <strong>${category.code}</strong>
+            <span>${category.title}</span>
+          </article>
+        `
+      )
+      .join("");
+  }
 
   function activateTab(tabName) {
     tabButtons.forEach((button) => {
@@ -236,6 +373,9 @@ function bindHomeSession() {
   renderRoleplaySubtabs();
   renderRoleplays();
   renderPrepared();
+  renderUpcomingEvents();
+  renderRadarChart();
+  renderRecentRoleplays();
   activateTab("testing");
 }
 

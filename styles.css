@@ -504,6 +504,90 @@ textarea::placeholder {
   padding-top: 24px;
 }
 
+.dashboard-shell {
+  display: grid;
+  grid-template-columns: 1.05fr 1.2fr 0.9fr;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.dashboard-card {
+  min-height: 320px;
+}
+
+.dashboard-card h3 {
+  margin-bottom: 18px;
+}
+
+.event-list,
+.recent-roleplay-list,
+.radar-legend {
+  display: grid;
+  gap: 12px;
+}
+
+.event-row,
+.recent-roleplay-row,
+.radar-legend-row,
+.empty-mini-state {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.event-row span,
+.recent-roleplay-row span,
+.radar-legend-row span,
+.empty-mini-state span {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.radar-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.radar-stage {
+  position: relative;
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  justify-self: center;
+}
+
+.radar-base-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.94;
+  filter: brightness(0) saturate(100%) invert(83%) sepia(11%) saturate(503%)
+    hue-rotate(180deg) brightness(95%) contrast(88%);
+}
+
+.radar-point {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 6px rgba(255, 191, 61, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.radar-label {
+  position: absolute;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  transform: translate(-50%, -50%);
+  text-shadow: 0 2px 12px rgba(4, 18, 37, 0.7);
+}
+
 .category-grid,
 .roadmap-grid {
   display: grid;
@@ -1246,6 +1330,8 @@ body.feedback-open {
   .site-header,
   .content-layout,
   .prepared-review-layout,
+  .dashboard-shell,
+  .radar-layout,
   .stats-grid,
   .pricing-grid,
   .dual-auth-layout,

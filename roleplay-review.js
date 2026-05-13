@@ -21,6 +21,10 @@ function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
+function normalizeRecentRoleplays(user) {
+  return Array.isArray(user.recentRoleplays) ? user.recentRoleplays : [];
+}
+
 function bindRoleplayReviewPage() {
   const currentUser = getCurrentUser();
 
@@ -103,6 +107,8 @@ function bindRoleplayReviewPage() {
 
     if (userIndex !== -1) {
       users[userIndex].roleplaysDone = Number(users[userIndex].roleplaysDone || 0) + 1;
+      const recent = normalizeRecentRoleplays(users[userIndex]).filter((id) => id !== eventConfig.id);
+      users[userIndex].recentRoleplays = [eventConfig.id, ...recent].slice(0, 6);
       saveUsers(users);
     }
 
