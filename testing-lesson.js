@@ -78,6 +78,18 @@ function buildQuestionSet(baseLesson, progress, backupQuestions = []) {
     .slice(0, 20);
 }
 
+function getAnswerFeedback(question, selectedAnswer) {
+  const selectedChoice = question.choices[selectedAnswer];
+  const correctChoice = question.choices[question.answer];
+  const explanation = question.explanation || "The answer key identifies the correct response for this item.";
+
+  if (selectedAnswer === question.answer) {
+    return `Correct. ${explanation}`;
+  }
+
+  return `Not quite. You chose "${selectedChoice}", but the correct answer is "${correctChoice}". ${explanation}`;
+}
+
 function persistUser(user) {
   const users = getJson(USERS_KEY);
   const index = users.findIndex((entry) => entry.email.toLowerCase() === user.email.toLowerCase());
@@ -179,9 +191,7 @@ function bindLesson() {
           }
         });
 
-        feedbackNode.textContent = correct
-          ? `Correct. ${question.focusTerm} is a term to keep building on.`
-          : `Not quite. Review ${question.focusTerm} and its meaning before the next question.`;
+        feedbackNode.textContent = getAnswerFeedback(question, selectedAnswer);
         nextButton.disabled = false;
       });
     });
