@@ -116,7 +116,7 @@ function bindRoadmap() {
               return `<span class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""}" aria-label="Lesson ${lessonNumber}${done ? " completed" : " incomplete"}">L${lessonNumber}</span>`;
             }).join("")}
           </div>
-          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}&htmlv=20260521e">Start Lesson</a>
+          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}&htmlv=20260521f">Start Lesson</a>
         </article>
       `;
     })

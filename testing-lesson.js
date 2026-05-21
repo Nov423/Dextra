@@ -78,16 +78,59 @@ function buildQuestionSet(baseLesson, progress, backupQuestions = []) {
     .slice(0, 20);
 }
 
+function splitExplanationSentences(explanation) {
+  return explanation
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+}
+
+function normalizeFeedbackText(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function trimFeedback(text, maxLength = 280) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength).replace(/\s+\S*$/, "")}...`;
+}
+
+function getConciseExplanation(question, selectedAnswer) {
+  const correctChoice = question.choices[question.answer];
+  const selectedChoice = question.choices[selectedAnswer];
+  const correctChoiceKey = normalizeFeedbackText(correctChoice);
+  const selectedChoiceKey = normalizeFeedbackText(selectedChoice);
+  const sentences = splitExplanationSentences(
+    question.explanation || "The answer key identifies the correct response for this item."
+  ).filter((sentence) => normalizeFeedbackText(sentence) !== correctChoiceKey);
+  const mainReason = sentences[0] || question.explanation || "The answer key identifies the correct response.";
+  const selectedReason = sentences.find((sentence) =>
+    normalizeFeedbackText(sentence).includes(selectedChoiceKey)
+  );
+  const parts = [mainReason];
+
+  if (selectedAnswer !== question.answer && selectedReason && selectedReason !== mainReason) {
+    parts.push(selectedReason);
+  } else if (sentences[1] && `${mainReason} ${sentences[1]}`.length <= 240) {
+    parts.push(sentences[1]);
+  }
+
+  return trimFeedback(parts.join(" "));
+}
+
 function getAnswerFeedback(question, selectedAnswer) {
   const selectedChoice = question.choices[selectedAnswer];
   const correctChoice = question.choices[question.answer];
-  const explanation = question.explanation || "The answer key identifies the correct response for this item.";
+  const explanation = getConciseExplanation(question, selectedAnswer);
 
   if (selectedAnswer === question.answer) {
-    return `Correct. ${explanation}`;
+    return `Correct: "${correctChoice}". ${explanation}`;
   }
 
-  return `Not quite. You chose "${selectedChoice}", but the correct answer is "${correctChoice}". ${explanation}`;
+  return `Not quite. You chose "${selectedChoice}". Correct: "${correctChoice}". ${explanation}`;
 }
 
 function persistUser(user) {
