@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260521e" />
+    <link rel="stylesheet" href="styles.css?v=20260521g" />
   </head>
   <body>
     <div class="page-shell">
@@ -31,6 +31,10 @@
           <a class="profile-link hidden" id="profileLink" href="profile.html" aria-label="Open profile">
             <span class="profile-icon" aria-hidden="true"></span>
           </a>
+          <span class="coin-pill hidden" id="headerCoinPill" aria-label="Coin balance">
+            <span class="coin-dot" aria-hidden="true"></span>
+            <span id="headerCoinCount">0</span>
+          </span>
           <button class="button secondary header-auth hidden" id="signOutButton" type="button">
             Sign Out
           </button>
@@ -201,6 +205,23 @@
             </label>
           </div>
           <section class="category-grid hidden" data-tab-panel="prepared" id="writtenGrid"></section>
+
+          <section class="section-heading hidden" data-tab-panel="leaderboard" id="leaderboard">
+            <p class="eyebrow">Leaderboard</p>
+            <h3>Daily Practice Leaderboard</h3>
+          </section>
+          <section class="leaderboard-board hidden" data-tab-panel="leaderboard" id="leaderboardBoard"></section>
+
+          <section class="section-heading hidden" data-tab-panel="shop" id="shop">
+            <p class="eyebrow">Shop</p>
+            <h3>Spend Coins on Profile Cosmetics</h3>
+          </section>
+          <div class="shop-wallet hidden" data-tab-panel="shop">
+            <span class="coin-dot" aria-hidden="true"></span>
+            <strong id="shopCoinBalance">0</strong>
+            <span>coins available</span>
+          </div>
+          <section class="shop-grid hidden" data-tab-panel="shop" id="shopGrid"></section>
         </div>
       </main>
     </div>
@@ -208,6 +229,6 @@
     <script src="reset-seed.js?v=20260415seed"></script>
     <script src="feedback-modal.js?v=20260416h"></script>
     <script src="learning-data.js?v=20260521e"></script>
-    <script src="script.js?v=20260513a"></script>
+    <script src="script.js?v=20260521g"></script>
   </body>
 </html>

@@ -10,6 +10,10 @@ function getStoredJson(key) {
   }
 }
 
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
 function getCurrentUser() {
   try {
     return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
@@ -23,8 +27,19 @@ function normalizeUser(user) {
     testsTaken: 0,
     roleplaysDone: 0,
     writtensGraded: 0,
+    coins: 0,
+    coinsEarned: 0,
+    currentStreak: 0,
+    bestStreak: user?.streak || 0,
+    ownedCosmetics: [],
+    equippedBanner: "",
+    equippedNameEffect: "",
     ...user,
   };
+}
+
+function formatCoins(value) {
+  return Math.max(0, Number(value) || 0).toLocaleString();
 }
 
 function bindProfilePage() {
@@ -45,9 +60,30 @@ function bindProfilePage() {
   }
 
   document.getElementById("profileHeading").textContent = `${fullUser.name}'s profile`;
+  document.getElementById("profileCoinCount").textContent = formatCoins(fullUser.coins);
+  document.getElementById("coinsValue").textContent = formatCoins(fullUser.coins);
   document.getElementById("testsTakenValue").textContent = String(fullUser.testsTaken);
   document.getElementById("roleplaysDoneValue").textContent = String(fullUser.roleplaysDone);
   document.getElementById("writtensGradedValue").textContent = String(fullUser.writtensGraded);
+  saveUsers(users);
+
+  const bannerPreview = document.getElementById("profileBannerPreview");
+  const namePreview = document.getElementById("profileNamePreview");
+  bannerPreview.classList.remove("profile-banner-gold", "profile-banner-blue");
+  namePreview.classList.remove("profile-name-glow", "profile-name-sky");
+  namePreview.textContent = fullUser.name;
+
+  if (fullUser.equippedBanner === "banner-gold") {
+    bannerPreview.classList.add("profile-banner-gold");
+  } else if (fullUser.equippedBanner === "banner-blue") {
+    bannerPreview.classList.add("profile-banner-blue");
+  }
+
+  if (fullUser.equippedNameEffect === "name-glow") {
+    namePreview.classList.add("profile-name-glow");
+  } else if (fullUser.equippedNameEffect === "name-sky") {
+    namePreview.classList.add("profile-name-sky");
+  }
 
   const studentPanel = document.getElementById("studentPanel");
   const advisorPanel = document.getElementById("advisorPanel");

@@ -21,6 +21,28 @@ function updateUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
+function normalizePracticeUser(user) {
+  user.coins = Math.max(0, Number(user.coins || 0));
+  user.coinsEarned = Math.max(0, Number(user.coinsEarned || 0));
+  user.currentStreak = Math.max(0, Number(user.currentStreak || 0));
+  user.bestStreak = Math.max(Number(user.bestStreak || 0), Number(user.streak || 0));
+  user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
+  user.equippedBanner ||= "";
+  user.equippedNameEffect ||= "";
+  return user;
+}
+
+function formatCoins(value) {
+  return Math.max(0, Number(value) || 0).toLocaleString();
+}
+
+function updateRoadmapCoinDisplay(user) {
+  const coinCount = document.getElementById("roadmapCoinCount");
+  if (coinCount) {
+    coinCount.textContent = formatCoins(user.coins);
+  }
+}
+
 function getVirtualLessonId(chapter, lessonNumber) {
   const baseLesson = chapter.lessons[(lessonNumber - 1) % chapter.lessons.length];
   return `${baseLesson.id}-v${lessonNumber}`;
@@ -83,6 +105,8 @@ function bindRoadmap() {
     window.location.href = "sign-in.html";
     return;
   }
+  normalizePracticeUser(user);
+  updateRoadmapCoinDisplay(user);
 
   const progress = ensureProgress(user, category);
   saveUser(user);
@@ -116,7 +140,7 @@ function bindRoadmap() {
               return `<span class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""}" aria-label="Lesson ${lessonNumber}${done ? " completed" : " incomplete"}">L${lessonNumber}</span>`;
             }).join("")}
           </div>
-          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}&htmlv=20260521f">Start Lesson</a>
+          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}&htmlv=20260521g">Start Lesson</a>
         </article>
       `;
     })

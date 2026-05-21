@@ -21,6 +21,70 @@ function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
+function normalizePracticeUser(user) {
+  user.coins = Math.max(0, Number(user.coins || 0));
+  user.coinsEarned = Math.max(0, Number(user.coinsEarned || 0));
+  user.currentStreak = Math.max(0, Number(user.currentStreak || 0));
+  user.bestStreak = Math.max(Number(user.bestStreak || 0), Number(user.streak || 0));
+  user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
+  user.equippedBanner ||= "";
+  user.equippedNameEffect ||= "";
+  return user;
+}
+
+function formatCoins(value) {
+  return Math.max(0, Number(value) || 0).toLocaleString();
+}
+
+function updateLessonCoinDisplay(user) {
+  const coinCount = document.getElementById("lessonCoinCount");
+  if (coinCount) {
+    coinCount.textContent = formatCoins(user.coins);
+  }
+}
+
+function getCoinReward() {
+  return Math.floor(Math.random() * 6) + 5;
+}
+
+function playCorrectSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      return;
+    }
+
+    const context = new AudioContext();
+    const gain = context.createGain();
+    gain.connect(context.destination);
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.34);
+
+    [660, 880].forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime + index * 0.08);
+      oscillator.connect(gain);
+      oscillator.start(context.currentTime + index * 0.08);
+      oscillator.stop(context.currentTime + 0.22 + index * 0.08);
+    });
+
+    window.setTimeout(() => context.close(), 500);
+  } catch {
+    // Sound is optional and should never block answering.
+  }
+}
+
+function applyCorrectReward(user) {
+  const reward = getCoinReward();
+  user.coins = Number(user.coins || 0) + reward;
+  user.coinsEarned = Number(user.coinsEarned || 0) + reward;
+  user.currentStreak = Number(user.currentStreak || 0) + 1;
+  user.bestStreak = Math.max(Number(user.bestStreak || 0), user.currentStreak);
+  return reward;
+}
+
 function getVirtualLesson(baseLesson, lessonNumber) {
   const clone = structuredClone(baseLesson);
   clone.virtualId = `${baseLesson.id}-v${lessonNumber}`;
@@ -121,13 +185,14 @@ function getConciseExplanation(question, selectedAnswer) {
   return trimFeedback(parts.join(" "));
 }
 
-function getAnswerFeedback(question, selectedAnswer) {
+function getAnswerFeedback(question, selectedAnswer, coinReward = 0) {
   const selectedChoice = question.choices[selectedAnswer];
   const correctChoice = question.choices[question.answer];
   const explanation = getConciseExplanation(question, selectedAnswer);
 
   if (selectedAnswer === question.answer) {
-    return `Correct: "${correctChoice}". ${explanation}`;
+    const rewardText = coinReward ? ` +${coinReward} coins.` : "";
+    return `Correct: "${correctChoice}".${rewardText} ${explanation}`;
   }
 
   return `Not quite. You chose "${selectedChoice}". Correct: "${correctChoice}". ${explanation}`;
@@ -163,6 +228,8 @@ function bindLesson() {
     window.location.href = "sign-in.html";
     return;
   }
+  normalizePracticeUser(user);
+  updateLessonCoinDisplay(user);
 
   const url = new URL(window.location.href);
   const categoryId = url.searchParams.get("category");
@@ -221,8 +288,15 @@ function bindLesson() {
 
         selectedAnswer = Number(button.dataset.choice);
         const correct = selectedAnswer === question.answer;
+        const coinReward = correct ? applyCorrectReward(user) : 0;
+        if (correct) {
+          playCorrectSound();
+        } else {
+          user.currentStreak = 0;
+        }
         updateTermPerformance(progress, question.focusTerm, correct);
         persistUser(user);
+        updateLessonCoinDisplay(user);
 
         choiceGrid.querySelectorAll("[data-choice]").forEach((choiceButton) => {
           const index = Number(choiceButton.dataset.choice);
@@ -234,7 +308,7 @@ function bindLesson() {
           }
         });
 
-        feedbackNode.textContent = getAnswerFeedback(question, selectedAnswer);
+        feedbackNode.textContent = getAnswerFeedback(question, selectedAnswer, coinReward);
         nextButton.disabled = false;
       });
     });

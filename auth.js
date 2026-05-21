@@ -135,6 +135,13 @@ function createUserRecord(base) {
     testsTaken: 0,
     roleplaysDone: 0,
     writtensGraded: 0,
+    coins: 0,
+    coinsEarned: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    ownedCosmetics: [],
+    equippedBanner: "",
+    equippedNameEffect: "",
     ...base,
   };
 }

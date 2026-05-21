@@ -1,6 +1,50 @@
 const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
 
+const SHOP_ITEMS = [
+  {
+    id: "banner-gold",
+    type: "banner",
+    title: "Gold Spotlight Banner",
+    description: "Warm gold profile banner for standout practice streaks.",
+    cost: 80,
+  },
+  {
+    id: "banner-blue",
+    type: "banner",
+    title: "Blue Wave Banner",
+    description: "Cool blue profile banner with a clean competition look.",
+    cost: 80,
+  },
+  {
+    id: "name-glow",
+    type: "nameEffect",
+    title: "Glow Name Effect",
+    description: "Adds a soft gold glow to your profile display name.",
+    cost: 120,
+  },
+  {
+    id: "name-sky",
+    type: "nameEffect",
+    title: "Sky Name Effect",
+    description: "Adds a blue accent treatment to your profile name.",
+    cost: 120,
+  },
+];
+
+const LEADERBOARD_FILLERS = [
+  { name: "KoroKage", bestStreak: 48, coinsEarned: 520 },
+  { name: "Jacbo", bestStreak: 45, coinsEarned: 490 },
+  { name: "ChenThePen", bestStreak: 39, coinsEarned: 450 },
+  { name: "Krackelackling", bestStreak: 36, coinsEarned: 410 },
+  { name: "ArthurCoviello", bestStreak: 33, coinsEarned: 375 },
+  { name: "TetrSweat", bestStreak: 28, coinsEarned: 340 },
+  { name: "ChangforChange", bestStreak: 24, coinsEarned: 305 },
+  { name: "PlaneGuy", bestStreak: 20, coinsEarned: 260 },
+];
+
+const SHOP_ITEM_MAP = new Map(SHOP_ITEMS.map((item) => [item.id, item]));
+
 function getCurrentUser() {
   try {
     return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
@@ -17,15 +61,55 @@ function getUsers() {
   }
 }
 
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
 function normalizeUser(user) {
   return {
     testsTaken: 0,
     roleplaysDone: 0,
     writtensGraded: 0,
+    coins: 0,
+    coinsEarned: 0,
+    currentStreak: 0,
+    bestStreak: user?.streak || 0,
     testingProgress: {},
     recentRoleplays: [],
+    ownedCosmetics: [],
+    equippedBanner: "",
+    equippedNameEffect: "",
     ...user,
   };
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatCoins(value) {
+  return Math.max(0, Number(value) || 0).toLocaleString();
+}
+
+function normalizeCosmetics(user) {
+  user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
+  user.equippedBanner = user.equippedBanner || "";
+  user.equippedNameEffect = user.equippedNameEffect || "";
+  return user;
+}
+
+function getInitials(name) {
+  return String(name || "D")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "D";
 }
 
 function matchesSearch(item, query) {
@@ -89,6 +173,8 @@ function bindHomeSession() {
   const signInButton = document.getElementById("headerSignIn");
   const signUpButton = document.getElementById("headerSignUp");
   const signOutButton = document.getElementById("signOutButton");
+  const headerCoinPill = document.getElementById("headerCoinPill");
+  const headerCoinCount = document.getElementById("headerCoinCount");
   const publicNav = document.getElementById("publicNav");
   const publicContent = document.getElementById("publicContent");
   const learningHub = document.getElementById("learningHub");
@@ -109,6 +195,7 @@ function bindHomeSession() {
 
   if (!user) {
     profileLink.classList.add("hidden");
+    headerCoinPill?.classList.add("hidden");
     signOutButton.classList.add("hidden");
     signInButton.classList.remove("hidden");
     signUpButton.classList.remove("hidden");
@@ -125,16 +212,20 @@ function bindHomeSession() {
   }
 
   profileLink.classList.remove("hidden");
+  headerCoinPill?.classList.remove("hidden");
   signOutButton.classList.remove("hidden");
   signInButton.classList.add("hidden");
   signUpButton.classList.add("hidden");
-  const fullUser = getUsers()
+  let fullUser = getUsers()
     .map(normalizeUser)
     .find((entry) => entry.email?.toLowerCase() === user.email?.toLowerCase()) || normalizeUser(user);
+  normalizeCosmetics(fullUser);
   publicNav.innerHTML = `
     <a href="#testing" data-tab-target="testing">Testing</a>
     <a href="#roleplays" data-tab-target="roleplays">Roleplays</a>
     <a href="#prepared" data-tab-target="prepared">Prepared Events</a>
+    <a href="#leaderboard" data-tab-target="leaderboard">Leaderboard</a>
+    <a href="#shop" data-tab-target="shop">Shop</a>
   `;
   publicContent.classList.add("hidden");
   learningHub.classList.remove("hidden");
@@ -155,10 +246,167 @@ function bindHomeSession() {
   const upcomingEventsList = document.getElementById("upcomingEventsList");
   const recentRoleplaysList = document.getElementById("recentRoleplaysList");
   const radarStage = document.getElementById("testingRadarStage");
+  const leaderboardBoard = document.getElementById("leaderboardBoard");
+  const shopGrid = document.getElementById("shopGrid");
+  const shopCoinBalance = document.getElementById("shopCoinBalance");
   const tabButtons = document.querySelectorAll("[data-tab-target]");
   const tabSections = document.querySelectorAll("[data-tab-panel]");
 
   let activeRoleplayGroup = DEXTRA_LEARNING_DATA.roleplayGroups[0]?.id || "team";
+
+  function persistFullUser() {
+    const users = getUsers().map(normalizeUser);
+    const index = users.findIndex((entry) => entry.email?.toLowerCase() === fullUser.email?.toLowerCase());
+
+    if (index >= 0) {
+      users[index] = normalizeUser(fullUser);
+    } else {
+      users.push(normalizeUser(fullUser));
+    }
+
+    saveUsers(users);
+    updateCoinDisplays();
+    renderLeaderboard();
+    renderShop();
+  }
+
+  function updateCoinDisplays() {
+    if (headerCoinCount) {
+      headerCoinCount.textContent = formatCoins(fullUser.coins);
+    }
+
+    if (shopCoinBalance) {
+      shopCoinBalance.textContent = formatCoins(fullUser.coins);
+    }
+  }
+
+  function getLeaderboardEntries() {
+    const users = getUsers()
+      .map(normalizeUser)
+      .filter((entry) => entry.name)
+      .map((entry) => ({
+        name: entry.name,
+        bestStreak: Number(entry.bestStreak || entry.currentStreak || entry.streak || 0),
+        coinsEarned: Number(entry.coinsEarned || 0),
+        isCurrentUser: entry.email?.toLowerCase() === fullUser.email?.toLowerCase(),
+      }));
+
+    const combined = [...users, ...LEADERBOARD_FILLERS.map((entry) => ({ ...entry, isFiller: true }))];
+    const byName = new Map();
+
+    combined.forEach((entry) => {
+      const key = entry.name.toLowerCase();
+      const existing = byName.get(key);
+      if (!existing || entry.bestStreak > existing.bestStreak || entry.isCurrentUser) {
+        byName.set(key, entry);
+      }
+    });
+
+    return [...byName.values()]
+      .sort((left, right) => {
+        if (right.bestStreak !== left.bestStreak) {
+          return right.bestStreak - left.bestStreak;
+        }
+        return right.coinsEarned - left.coinsEarned;
+      })
+      .slice(0, 8);
+  }
+
+  function renderLeaderboard() {
+    if (!leaderboardBoard) {
+      return;
+    }
+
+    const rows = getLeaderboardEntries();
+    leaderboardBoard.innerHTML = `
+      <div class="leaderboard-shell">
+        <header class="leaderboard-hero-card">
+          <span class="leaderboard-flame" aria-hidden="true"></span>
+          <div>
+            <h3>Daily Practice Leaderboard</h3>
+            <p>Top streaks this week</p>
+          </div>
+        </header>
+        <div class="leaderboard-table" aria-label="Daily practice leaderboard">
+          <div class="leaderboard-head">
+            <span>Rank</span>
+            <span>Username</span>
+            <span>Streak</span>
+          </div>
+          ${rows
+            .map((entry, index) => {
+              const rank = index + 1;
+              const medalClass = rank === 1 ? "gold" : rank === 2 ? "silver" : rank === 3 ? "bronze" : "";
+              return `
+                <article class="leaderboard-row ${medalClass}${entry.isCurrentUser ? " current-user" : ""}">
+                  <span class="leaderboard-rank">${rank}</span>
+                  <span class="leaderboard-user">
+                    <span class="leaderboard-avatar">${escapeHtml(getInitials(entry.name))}</span>
+                    <strong>${escapeHtml(entry.name)}</strong>
+                  </span>
+                  <span class="leaderboard-score">
+                    <span class="score-flame" aria-hidden="true"></span>
+                    <strong>${formatCoins(entry.bestStreak)}</strong>
+                    <small>days</small>
+                  </span>
+                </article>
+              `;
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderShop() {
+    if (!shopGrid) {
+      return;
+    }
+
+    const owned = new Set(fullUser.ownedCosmetics || []);
+    shopGrid.innerHTML = SHOP_ITEMS.map((item) => {
+      const isOwned = owned.has(item.id);
+      const isEquipped =
+        (item.type === "banner" && fullUser.equippedBanner === item.id) ||
+        (item.type === "nameEffect" && fullUser.equippedNameEffect === item.id);
+      const canBuy = Number(fullUser.coins || 0) >= item.cost;
+      const buttonLabel = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - fullUser.coins)}`;
+      const action = isOwned ? "equip" : "buy";
+
+      return `
+        <article class="panel shop-card${isOwned ? " owned" : ""}">
+          <div class="shop-item-preview ${item.id}">
+            <span>${item.type === "banner" ? "Banner" : "Name"}</span>
+          </div>
+          <div>
+            <p class="eyebrow">${item.type === "banner" ? "Profile Banner" : "Name Effect"}</p>
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.description)}</p>
+          </div>
+          <div class="shop-card-footer">
+            <span class="shop-price"><span class="coin-dot" aria-hidden="true"></span>${formatCoins(item.cost)}</span>
+            <button
+              class="button ${isEquipped ? "secondary" : "primary"}"
+              type="button"
+              data-shop-action="${action}"
+              data-shop-id="${item.id}"
+              ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
+            >
+              ${buttonLabel}
+            </button>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  function equipItem(item) {
+    if (item.type === "banner") {
+      fullUser.equippedBanner = item.id;
+    } else if (item.type === "nameEffect") {
+      fullUser.equippedNameEffect = item.id;
+    }
+  }
 
   function getCategoryProgress(category) {
     const categoryProgress = fullUser.testingProgress?.[category.id];
@@ -259,7 +507,7 @@ function bindHomeSession() {
     });
   }
 
-  function activateTab(tabName) {
+  function activateTab(tabName, updateHash = true) {
     tabButtons.forEach((button) => {
       button.classList.toggle("active-tab", button.dataset.tabTarget === tabName);
     });
@@ -267,6 +515,10 @@ function bindHomeSession() {
     tabSections.forEach((section) => {
       section.classList.toggle("hidden", section.dataset.tabPanel !== tabName);
     });
+
+    if (updateHash && window.location.hash !== `#${tabName}`) {
+      history.replaceState(null, "", `#${tabName}`);
+    }
   }
 
   function renderTesting() {
@@ -350,6 +602,33 @@ function bindHomeSession() {
   roleplaySearch.addEventListener("input", renderRoleplays);
   preparedSearch.addEventListener("input", renderPrepared);
 
+  shopGrid?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-shop-action]");
+    if (!button || button.disabled) {
+      return;
+    }
+
+    const item = SHOP_ITEM_MAP.get(button.dataset.shopId);
+    if (!item) {
+      return;
+    }
+
+    normalizeCosmetics(fullUser);
+
+    if (button.dataset.shopAction === "buy") {
+      const cost = Number(item.cost || 0);
+      if (Number(fullUser.coins || 0) < cost) {
+        return;
+      }
+
+      fullUser.coins = Math.max(0, Number(fullUser.coins || 0) - cost);
+      fullUser.ownedCosmetics = [...new Set([...fullUser.ownedCosmetics, item.id])];
+    }
+
+    equipItem(item);
+    persistFullUser();
+  });
+
   tabButtons.forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
@@ -357,6 +636,7 @@ function bindHomeSession() {
     });
   });
 
+  persistFullUser();
   renderTesting();
   renderRoleplaySubtabs();
   renderRoleplays();
@@ -364,7 +644,14 @@ function bindHomeSession() {
   renderUpcomingEvents();
   renderRadarChart();
   renderRecentRoleplays();
-  activateTab("testing");
+  updateCoinDisplays();
+  renderLeaderboard();
+  renderShop();
+  const tabNames = [...tabButtons].map((button) => button.dataset.tabTarget);
+  const initialTab = tabNames.includes(window.location.hash.slice(1))
+    ? window.location.hash.slice(1)
+    : "testing";
+  activateTab(initialTab, false);
 }
 
 sessionStorage.removeItem("currentUser");

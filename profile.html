@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260513a" />
+    <link rel="stylesheet" href="styles.css?v=20260521g" />
   </head>
   <body>
     <div class="page-shell">
@@ -29,6 +29,10 @@
           <a class="profile-link" href="profile.html" aria-label="Open profile">
             <span class="profile-icon" aria-hidden="true"></span>
           </a>
+          <span class="coin-pill" id="profileCoinPill" aria-label="Coin balance">
+            <span class="coin-dot" aria-hidden="true"></span>
+            <span id="profileCoinCount">0</span>
+          </span>
           <button class="button secondary header-auth" id="profileSignOutButton" type="button">
             Sign Out
           </button>
@@ -41,7 +45,15 @@
           <h3 id="profileHeading">Profile</h3>
         </section>
 
+        <section class="profile-banner-preview" id="profileBannerPreview">
+          <span id="profileNamePreview">Profile</span>
+        </section>
+
         <section class="stats-grid">
+          <article class="panel stat-card">
+            <p class="eyebrow">Coins</p>
+            <h3 id="coinsValue">0</h3>
+          </article>
           <article class="panel stat-card">
             <p class="eyebrow">Tests Taken</p>
             <h3 id="testsTakenValue">0</h3>
@@ -77,6 +89,6 @@
 
     <script src="reset-seed.js?v=20260415seed"></script>
     <script src="feedback-modal.js?v=20260416h"></script>
-    <script src="profile.js?v=20260416e"></script>
+    <script src="profile.js?v=20260521g"></script>
   </body>
 </html>
