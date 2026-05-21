@@ -51,11 +51,23 @@ function scoreForTerm(progress, term) {
   return stats ? stats.wrong * 3 + stats.seen : 0;
 }
 
-function buildQuestionSet(baseLesson, progress) {
-  const sourceQuestions = [];
-  while (sourceQuestions.length < 20) {
-    sourceQuestions.push(...baseLesson.questions);
-  }
+function collectQuestionsFromLessons(lessons) {
+  return lessons.flatMap((lesson) => lesson.questions || []);
+}
+
+function buildQuestionSet(baseLesson, progress, backupQuestions = []) {
+  const uniqueQuestions = [];
+  const seenPrompts = new Set();
+  [...(baseLesson.questions || []), ...backupQuestions].forEach((question) => {
+    const promptKey = question.prompt.trim().toLowerCase();
+    if (!seenPrompts.has(promptKey)) {
+      seenPrompts.add(promptKey);
+      uniqueQuestions.push(question);
+    }
+  });
+
+  const availableQuestions = uniqueQuestions.length ? uniqueQuestions : baseLesson.questions;
+  const sourceQuestions = availableQuestions.slice(0, 20);
 
   return sourceQuestions
     .map((question, index) => ({
@@ -112,7 +124,9 @@ function bindLesson() {
   const baseLesson = chapter.lessons[(lessonNumber - 1) % chapter.lessons.length];
   const lesson = getVirtualLesson(baseLesson, lessonNumber);
   const progress = getProgress(user, category.id, category.chapters[0]?.id || chapter.id);
-  const questions = buildQuestionSet(baseLesson, progress);
+  const backupQuestions = collectQuestionsFromLessons(category.chapters.flatMap((entry) => entry.lessons));
+  const questions = buildQuestionSet(baseLesson, progress, backupQuestions);
+  const questionTotal = questions.length;
 
   let currentQuestionIndex = 0;
   let selectedAnswer = null;
@@ -124,14 +138,14 @@ function bindLesson() {
 
   document.getElementById("lessonCategoryCode").textContent = category.code;
   document.getElementById("lessonTitle").textContent = lesson.virtualTitle;
-  document.getElementById("lessonMeta").textContent = chapter.title;
+  document.getElementById("lessonMeta").textContent = `${chapter.title} • ${questionTotal} adaptive questions`;
 
   function renderQuestion() {
     const question = questions[currentQuestionIndex];
     selectedAnswer = null;
     promptNode.textContent = question.prompt;
     feedbackNode.textContent = "";
-    nextButton.textContent = currentQuestionIndex === 19 ? "Finish Lesson" : "Next Question";
+    nextButton.textContent = currentQuestionIndex === questionTotal - 1 ? "Finish Lesson" : "Next Question";
     nextButton.disabled = true;
 
     choiceGrid.innerHTML = question.choices
@@ -178,7 +192,7 @@ function bindLesson() {
       return;
     }
 
-    if (currentQuestionIndex === 19) {
+    if (currentQuestionIndex === questionTotal - 1) {
       if (!progress.completedLessons.includes(lesson.virtualId)) {
         progress.completedLessons.push(lesson.virtualId);
         user.testsTaken = (user.testsTaken || 0) + 1;

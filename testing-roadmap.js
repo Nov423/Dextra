@@ -109,12 +109,14 @@ function bindRoadmap() {
           <p>${completedCount} of ${totalLessons} lessons completed</p>
           <div class="micro-lessons">
             ${Array.from({ length: 10 }, (_, lessonIndex) => {
+              const lessonNumber = lessonIndex + 1;
               const virtualLessonId = getVirtualLessonId(chapter, lessonIndex + 1);
               const done = progress.completedLessons.includes(virtualLessonId);
-              return `<span class="micro-pill ${done ? "done" : ""}">L${lessonIndex + 1}</span>`;
+              const isNext = lessonNumber === nextLesson && !done;
+              return `<span class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""}" aria-label="Lesson ${lessonNumber}${done ? " completed" : " incomplete"}">L${lessonNumber}</span>`;
             }).join("")}
           </div>
-          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}">Start Lesson</a>
+          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}&htmlv=20260521c">Start Lesson</a>
         </article>
       `;
     })
