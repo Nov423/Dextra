@@ -141,11 +141,36 @@ function playCorrectSound() {
   }
 }
 
-function applyCoinReward(user, correctCount) {
-  const reward = Array.from({ length: correctCount }, getCoinReward).reduce(
-    (total, amount) => total + amount,
-    0
-  );
+function playCoinSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      return;
+    }
+
+    const context = new AudioContext();
+    const gain = context.createGain();
+    gain.connect(context.destination);
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.07, context.currentTime + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
+
+    [980, 1240, 1560].forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime + index * 0.055);
+      oscillator.connect(gain);
+      oscillator.start(context.currentTime + index * 0.055);
+      oscillator.stop(context.currentTime + 0.16 + index * 0.055);
+    });
+
+    window.setTimeout(() => context.close(), 520);
+  } catch {
+    // Coin sounds are optional and should never interrupt the lesson.
+  }
+}
+
+function applyCoinReward(user, reward) {
   user.coins = Number(user.coins || 0) + reward;
   user.coinsEarned = Number(user.coinsEarned || 0) + reward;
   return reward;
@@ -169,11 +194,11 @@ function getProgress(user, categoryId, firstChapterId) {
     activeChapterId: firstChapterId,
     completedLessons: [],
     termPerformance: {},
-    rewardedCheckpoints: {},
+    rewardedQuestions: {},
   };
   user.testingProgress[categoryId].completedLessons ||= [];
   user.testingProgress[categoryId].termPerformance ||= {};
-  user.testingProgress[categoryId].rewardedCheckpoints ||= {};
+  user.testingProgress[categoryId].rewardedQuestions ||= {};
   return user.testingProgress[categoryId];
 }
 
@@ -308,37 +333,37 @@ function persistUser(user) {
   }
 }
 
-function getRewardedCheckpoints(progress, lessonId) {
-  progress.rewardedCheckpoints ||= {};
-  progress.rewardedCheckpoints[lessonId] ||= [];
-  return progress.rewardedCheckpoints[lessonId];
+function getRewardedQuestions(progress, lessonId) {
+  progress.rewardedQuestions ||= {};
+  progress.rewardedQuestions[lessonId] ||= [];
+  return progress.rewardedQuestions[lessonId];
 }
 
-function awardCheckpointCoins(user, progress, lessonId, checkpointNumber, correctCount, canEarnCoins) {
-  const rewardedCheckpoints = getRewardedCheckpoints(progress, lessonId);
-  const alreadyRewarded = rewardedCheckpoints.includes(checkpointNumber);
-
-  if (!canEarnCoins || alreadyRewarded) {
-    return {
-      reward: 0,
-      message: alreadyRewarded || !canEarnCoins ? "Redo run: no extra coins for this checkpoint." : "",
-    };
+function animateCoinReward(amount, originNode) {
+  const target = document.getElementById("lessonCoinPill") || document.getElementById("lessonCoinCount");
+  if (!target || !originNode) {
+    return;
   }
 
-  rewardedCheckpoints.push(checkpointNumber);
+  const originRect = originNode.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const startX = originRect.left + originRect.width / 2;
+  const startY = originRect.top + originRect.height / 2;
+  const endX = targetRect.left + targetRect.width / 2;
+  const endY = targetRect.top + targetRect.height / 2;
+  const coinCount = Math.min(5, Math.max(3, Math.ceil(amount / 2)));
 
-  if (!correctCount) {
-    return {
-      reward: 0,
-      message: "Checkpoint reached. No coins this time.",
-    };
+  for (let index = 0; index < coinCount; index += 1) {
+    const coin = document.createElement("span");
+    coin.className = "coin-burst";
+    coin.style.left = `${startX}px`;
+    coin.style.top = `${startY}px`;
+    coin.style.setProperty("--coin-dx", `${endX - startX + (index - 2) * 10}px`);
+    coin.style.setProperty("--coin-dy", `${endY - startY - Math.abs(index - 2) * 12}px`);
+    coin.style.animationDelay = `${index * 45}ms`;
+    document.body.appendChild(coin);
+    window.setTimeout(() => coin.remove(), 1100);
   }
-
-  const reward = applyCoinReward(user, correctCount);
-  return {
-    reward,
-    message: `Checkpoint: ${correctCount} correct in this set, +${reward} coins.`,
-  };
 }
 
 function renderLessonShop(user, persist) {
@@ -448,14 +473,13 @@ function bindLesson() {
   const questions = shuffleItems(buildQuestionSet(baseLesson, progress, backupQuestions));
   const questionTotal = questions.length;
   const canEarnCoins = !progress.completedLessons.includes(lesson.virtualId);
-  getRewardedCheckpoints(progress, lesson.virtualId);
+  const rewardedQuestions = getRewardedQuestions(progress, lesson.virtualId);
 
   let currentQuestionIndex = 0;
   let selectedAnswer = null;
   let activeQuestions = questions;
   let isRerunMode = false;
   let rerunRound = 0;
-  let checkpointCorrectCount = 0;
   let missedQuestions = [];
   let currentScreen = "question";
   const checkpointScreens = [];
@@ -491,16 +515,13 @@ function bindLesson() {
     nextButton.textContent = "Next Question";
   }
 
-  function queueCheckpointScreen(checkpointNumber, rewardResult) {
-    const rewardLine = rewardResult.message || "";
-
+  function queueCheckpointScreen(checkpointNumber) {
     if (MOTIVATION_CHECKPOINTS.has(checkpointNumber)) {
       checkpointScreens.push({
         checkpointNumber,
         type: "motivation",
         title: "You got this!",
         message: "Keep going and clean up anything you miss at the end.",
-        rewardLine,
         image: getMotivationImage(),
       });
       return;
@@ -512,7 +533,6 @@ function bindLesson() {
         type: "shop",
         title: "Checkpoint shop",
         message: "Use your coins on clothing items, or save them for later.",
-        rewardLine,
       });
       return;
     }
@@ -522,7 +542,6 @@ function bindLesson() {
       type: "summary",
       title: "Checkpoint complete",
       message: "Keep moving. Missed questions will come back at the end.",
-      rewardLine,
     });
   }
 
@@ -627,7 +646,6 @@ function bindLesson() {
         <div class="lesson-checkpoint-copy">
           <p class="eyebrow">${escapeHtml(isShop ? "Checkpoint Shop" : "Checkpoint")}</p>
           <h3>${escapeHtml(screen.title)}</h3>
-          ${screen.rewardLine ? `<p class="checkpoint-reward">${escapeHtml(screen.rewardLine)}</p>` : ""}
           <p>${escapeHtml(screen.message)}</p>
         </div>
         ${isShop ? renderLessonShop(user, persistLessonUser) : ""}
@@ -675,11 +693,20 @@ function bindLesson() {
         selectedAnswer = Number(button.dataset.choice);
         const correct = selectedAnswer === question.answer;
         const questionKey = getQuestionKey(question);
+        let rewardMessage = "";
         let checkpointMessage = "";
 
         if (correct) {
           playCorrectSound();
           updateCorrectStreak(user);
+          if (canEarnCoins && !rewardedQuestions.includes(questionKey)) {
+            const reward = getCoinReward();
+            rewardedQuestions.push(questionKey);
+            applyCoinReward(user, reward);
+            rewardMessage = ` +${reward} coins.`;
+            playCoinSound();
+            animateCoinReward(reward, button);
+          }
           if (isRerunMode) {
             missedQuestions = missedQuestions.filter((item) => getQuestionKey(item) !== questionKey);
             modeLabel.textContent = missedQuestions.length
@@ -694,21 +721,11 @@ function bindLesson() {
         }
 
         if (!isRerunMode) {
-          checkpointCorrectCount += correct ? 1 : 0;
           const checkpointNumber = currentQuestionIndex + 1;
 
           if (checkpointNumber % CHECKPOINT_INTERVAL === 0) {
-            const rewardResult = awardCheckpointCoins(
-              user,
-              progress,
-              lesson.virtualId,
-              checkpointNumber,
-              checkpointCorrectCount,
-              canEarnCoins
-            );
-            checkpointCorrectCount = 0;
-            checkpointMessage = rewardResult.message ? ` ${rewardResult.message}` : "";
-            queueCheckpointScreen(checkpointNumber, rewardResult);
+            checkpointMessage = " Checkpoint screen next.";
+            queueCheckpointScreen(checkpointNumber);
           }
         }
 
@@ -726,7 +743,7 @@ function bindLesson() {
           }
         });
 
-        feedbackNode.textContent = `${getAnswerFeedback(question, selectedAnswer)}${checkpointMessage}`;
+        feedbackNode.textContent = `${getAnswerFeedback(question, selectedAnswer)}${rewardMessage}${checkpointMessage}`;
         setNextButtonText();
         nextButton.disabled = false;
       });

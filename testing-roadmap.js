@@ -29,6 +29,8 @@ function normalizePracticeUser(user) {
   user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
   user.equippedBanner ||= "";
   user.equippedNameEffect ||= "";
+  user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
+  user.equippedClothing ||= "";
   return user;
 }
 
@@ -49,7 +51,7 @@ function getVirtualLessonId(chapter, lessonNumber) {
 }
 
 function getLessonHref(categoryId, chapterId, lessonNumber) {
-  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523a`;
+  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523d`;
 }
 
 function getProgressMap(user) {
@@ -130,7 +132,7 @@ function bindRoadmap() {
         (lessonNumber) => !progress.completedLessons.includes(getVirtualLessonId(chapter, lessonNumber))
       );
       const actionLesson = nextIncompleteLesson || 1;
-      const actionLabel = nextIncompleteLesson ? "Continue Lesson" : "Redo Lesson";
+      const actionLabel = nextIncompleteLesson ? "Start Lesson" : "Redo Lesson";
       return `
         <article class="panel roadmap-card ${isCurrent ? "current" : ""}">
           <p class="eyebrow">Chapter ${chapterIndex + 1}</p>
@@ -142,14 +144,36 @@ function bindRoadmap() {
               const virtualLessonId = getVirtualLessonId(chapter, lessonIndex + 1);
               const done = progress.completedLessons.includes(virtualLessonId);
               const isNext = lessonNumber === nextIncompleteLesson && !done;
-              return `<a class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""}" href="${getLessonHref(category.id, chapter.id, lessonNumber)}" aria-label="Lesson ${lessonNumber}${done ? " completed, redo" : " incomplete"}">L${lessonNumber}</a>`;
+              const selected = lessonNumber === actionLesson;
+              return `<button class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""} ${selected ? "selected" : ""}" type="button" data-lesson-number="${lessonNumber}" data-lesson-href="${getLessonHref(category.id, chapter.id, lessonNumber)}" data-lesson-done="${done}" aria-pressed="${selected}" aria-label="Select lesson ${lessonNumber}${done ? " completed, redo" : " incomplete"}">L${lessonNumber}</button>`;
             }).join("")}
           </div>
-          <a class="button primary" href="${getLessonHref(category.id, chapter.id, actionLesson)}">${actionLabel}</a>
+          <a class="button primary start-lesson-link" href="${getLessonHref(category.id, chapter.id, actionLesson)}">${actionLabel}</a>
         </article>
       `;
     })
     .join("");
+
+  document.getElementById("roadmapGrid").addEventListener("click", (event) => {
+    const lessonButton = event.target.closest("[data-lesson-href]");
+    if (!lessonButton) {
+      return;
+    }
+
+    const card = lessonButton.closest(".roadmap-card");
+    const startLink = card?.querySelector(".start-lesson-link");
+    if (!card || !startLink) {
+      return;
+    }
+
+    card.querySelectorAll("[data-lesson-href]").forEach((button) => {
+      const selected = button === lessonButton;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+    startLink.href = lessonButton.dataset.lessonHref;
+    startLink.textContent = lessonButton.dataset.lessonDone === "true" ? "Redo Lesson" : "Start Lesson";
+  });
 
   signOut("roadmapSignOutButton");
 }
