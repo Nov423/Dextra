@@ -6,11 +6,11 @@ const SHOP_CHECKPOINT = 10;
 const SHOP_PURCHASE_LIMIT = 3;
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 const WHEEL_REWARDS = [
-  { label: "10 coins", coins: 10, weight: 60 },
-  { label: "30 coins", coins: 30, weight: 20 },
-  { label: "50 coins", coins: 50, weight: 10 },
-  { label: "100 coins", coins: 100, weight: 9 },
-  { label: "500 coins", coins: 500, weight: 1 },
+  { label: "10", coins: 10, weight: 60 },
+  { label: "30", coins: 30, weight: 20 },
+  { label: "50", coins: 50, weight: 10 },
+  { label: "100", coins: 100, weight: 9 },
+  { label: "500", coins: 500, weight: 1 },
 ];
 
 const MOTIVATION_IMAGES = [
@@ -170,6 +170,51 @@ function pickWheelReward() {
     }
   }
   return WHEEL_REWARDS[0];
+}
+
+function getWheelSegments() {
+  let start = 0;
+  return WHEEL_REWARDS.map((reward) => {
+    const degrees = (reward.weight / 100) * 360;
+    const segment = {
+      reward,
+      start,
+      end: start + degrees,
+      center: start + degrees / 2,
+    };
+    start += degrees;
+    return segment;
+  });
+}
+
+function getWheelSpinRotation(reward) {
+  const segment = getWheelSegments().find((entry) => entry.reward.coins === reward.coins) || getWheelSegments()[0];
+  const width = segment.end - segment.start;
+  const edgePadding = Math.min(8, width * 0.2);
+  const targetAngle =
+    width > edgePadding * 2
+      ? segment.start + edgePadding + Math.random() * (width - edgePadding * 2)
+      : segment.center;
+  const turns = 5 + Math.floor(Math.random() * 2);
+  return 360 * turns + ((360 - targetAngle) % 360);
+}
+
+function renderWheelLabels() {
+  return getWheelSegments()
+    .map((segment) => {
+      const center = segment.center.toFixed(2);
+      const radius = segment.reward.coins === 500 ? 0.24 : segment.reward.coins === 100 ? 0.31 : 0.36;
+      return `
+        <span
+          class="reward-wheel-label"
+          data-reward="${segment.reward.coins}"
+          style="--label-angle: ${center}deg; --label-counter-angle: -${center}deg; --label-radius: calc(var(--wheel-size) * ${radius});"
+        >
+          ${escapeHtml(segment.reward.label)}
+        </span>
+      `;
+    })
+    .join("");
 }
 
 function isAdminUser(user) {
@@ -791,8 +836,11 @@ function bindLesson() {
     nextButton.disabled = true;
     choiceGrid.innerHTML = `
       <article class="lesson-checkpoint-card reward-wheel-card">
-        <div class="reward-wheel" aria-hidden="true">
-          ${WHEEL_REWARDS.map((reward) => `<span>${escapeHtml(reward.label)}</span>`).join("")}
+        <div class="reward-wheel-stage" aria-hidden="true">
+          <span class="reward-wheel-pointer"></span>
+          <div class="reward-wheel">
+            ${renderWheelLabels()}
+          </div>
         </div>
         <div class="lesson-checkpoint-copy">
           <p class="eyebrow">Daily Bonus</p>
@@ -807,9 +855,9 @@ function bindLesson() {
     const wheel = choiceGrid.querySelector(".reward-wheel");
     spinButton.addEventListener("click", () => {
       const reward = pickWheelReward();
-      const turns = 5 + Math.floor(Math.random() * 2);
-      const finalAngle = 360 * turns + Math.floor(Math.random() * 360);
+      const finalAngle = getWheelSpinRotation(reward);
       spinButton.disabled = true;
+      wheel.dataset.reward = String(reward.coins);
       wheel.style.setProperty("--wheel-rotation", `${finalAngle}deg`);
       wheel.classList.add("spinning");
       window.setTimeout(() => {

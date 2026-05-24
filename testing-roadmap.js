@@ -71,7 +71,7 @@ function getVirtualLessonId(chapter, lessonNumber) {
 }
 
 function getLessonHref(categoryId, chapterId, lessonNumber) {
-  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523g`;
+  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523i`;
 }
 
 function getProgressMap(user) {
