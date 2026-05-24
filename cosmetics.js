@@ -380,32 +380,29 @@ function renderDextraWhale(user, overrides = {}) {
   return `
     <svg class="whale-avatar" viewBox="0 0 658 456" role="img" aria-label="Dextra whale mascot">
       <defs>
-        <filter id="${id}-primary" color-interpolation-filters="sRGB">
-          <feFlood flood-color="${dextraEscapeHtml(whale.primary)}" result="color" />
-          <feComposite in="color" in2="SourceAlpha" operator="in" />
-        </filter>
-        <filter id="${id}-shadow" color-interpolation-filters="sRGB">
-          <feFlood flood-color="${dextraEscapeHtml(whale.primaryShadow)}" result="color" />
-          <feComposite in="color" in2="SourceAlpha" operator="in" />
-        </filter>
-        <filter id="${id}-secondary" color-interpolation-filters="sRGB">
-          <feFlood flood-color="${dextraEscapeHtml(whale.secondary)}" result="color" />
-          <feComposite in="color" in2="SourceAlpha" operator="in" />
-        </filter>
-        <filter id="${id}-detail" color-interpolation-filters="sRGB">
-          <feFlood flood-color="#33271f" result="color" />
-          <feComposite in="color" in2="SourceAlpha" operator="in" />
-        </filter>
-        <filter id="${id}-highlight" color-interpolation-filters="sRGB">
-          <feFlood flood-color="#ffffff" flood-opacity="0.88" result="color" />
-          <feComposite in="color" in2="SourceAlpha" operator="in" />
-        </filter>
+        <linearGradient id="${id}-body" x1="80" y1="110" x2="560" y2="390" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="${dextraEscapeHtml(dextraShadeHex(whale.primary, 0.12))}" />
+          <stop offset="0.62" stop-color="${dextraEscapeHtml(whale.primary)}" />
+          <stop offset="1" stop-color="${dextraEscapeHtml(whale.primaryShadow)}" />
+        </linearGradient>
+        <linearGradient id="${id}-belly" x1="76" y1="316" x2="360" y2="410" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="${dextraEscapeHtml(dextraShadeHex(whale.secondary, 0.08))}" />
+          <stop offset="1" stop-color="${dextraEscapeHtml(whale.secondary)}" />
+        </linearGradient>
       </defs>
-      <image href="assets/whale-base-mask.png" width="658" height="456" filter="url(#${id}-primary)" />
-      <image href="assets/whale-shadow-mask.png" width="658" height="456" filter="url(#${id}-shadow)" />
-      <image href="assets/whale-secondary-mask.png" width="658" height="456" filter="url(#${id}-secondary)" />
-      <image href="assets/whale-highlight-mask.png" width="658" height="456" filter="url(#${id}-highlight)" />
-      <image href="assets/whale-detail-mask.png" width="658" height="456" filter="url(#${id}-detail)" />
+      <path d="M505 214c24-58 77-104 135-109-2 60-28 105-78 134 42 30 65 78 66 134-59-8-99-41-122-95z" fill="url(#${id}-body)" />
+      <path d="M549 235c20-40 51-71 91-91-5 43-26 77-63 101 28 25 43 62 44 103-38-9-66-35-82-76z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.34" />
+      <path d="M33 266c0-112 79-174 207-174 95 0 170 30 231 78 48 37 83 52 108 53 18 0 32-8 42-24 6 75-21 133-80 174-54 37-136 51-239 39-74-9-139-28-205-28-43 0-64-51-64-118z" fill="url(#${id}-body)" />
+      <path d="M80 330c35 33 84 52 146 58 44 5 82 1 116-10-16 39-54 61-116 60-75-1-132-26-171-75-10-13 10-44 25-33z" fill="url(#${id}-belly)" />
+      <path d="M355 365c38 4 78-2 119-18-16 36-44 61-82 74-15-19-27-38-37-56z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.42" />
+      <path d="M390 386c36 14 68 15 95 3 1 34-14 55-47 63-23-15-39-37-48-66z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.52" />
+      <path d="M151 94c-7-38 8-68 45-88 34 16 51 46 51 91-33-11-65-12-96-3z" fill="${dextraEscapeHtml(whale.primary)}" />
+      <path d="M276 96c-1-39 18-68 56-84 31 20 43 52 35 94-30-14-61-17-91-10z" fill="${dextraEscapeHtml(whale.primary)}" />
+      <path d="M72 152c42-22 101-29 177-19" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.78" />
+      <path d="M105 137c37-15 80-20 129-13" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.78" />
+      <circle cx="281" cy="284" r="8" fill="#33271f" />
+      <path d="M39 322c65 10 136 14 213 14 44 0 66-16 70-54" fill="none" stroke="#33271f" stroke-width="8" stroke-linecap="round" />
+      <path d="M95 337c14 26 28 47 43 64M141 340c14 31 31 56 51 74M192 341c11 32 25 58 43 78M244 340c7 27 17 52 31 74" fill="none" stroke="${dextraEscapeHtml(dextraShadeHex(whale.primary, -0.12))}" stroke-width="4" stroke-linecap="round" opacity="0.52" />
       ${renderDextraAccessory(whale.accessory)}
     </svg>
   `;
