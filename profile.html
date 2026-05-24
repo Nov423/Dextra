@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260523a" />
+    <link rel="stylesheet" href="styles.css?v=20260524a" />
   </head>
   <body>
     <div class="page-shell">
@@ -45,8 +45,17 @@
           <h3 id="profileHeading">Profile</h3>
         </section>
 
-        <section class="profile-banner-preview" id="profileBannerPreview">
-          <span id="profileNamePreview">Profile</span>
+        <section class="profile-banner-preview profile-hero-card" id="profileBannerPreview">
+          <div class="profile-picture-frame" id="profilePictureFrame">
+            <img class="profile-picture hidden" id="profilePicturePreview" alt="" />
+            <span id="profileInitialsPreview">D</span>
+          </div>
+          <div class="profile-whale-stage" id="profileWhalePreview"></div>
+          <div class="profile-identity-copy">
+            <span id="profileNamePreview">Profile</span>
+            <label class="button secondary profile-upload-button" for="profilePictureInput">Upload Picture</label>
+            <input class="sr-only" id="profilePictureInput" type="file" accept="image/*" />
+          </div>
         </section>
 
         <section class="stats-grid">
@@ -74,6 +83,23 @@
           <p id="studentClassText">No class assigned.</p>
         </section>
 
+        <section class="panel profile-panel">
+          <p class="eyebrow">Whale Customizer</p>
+          <h3>Customize your mascot</h3>
+          <div class="customizer-grid" id="customizerGrid"></div>
+        </section>
+
+        <section class="panel profile-panel">
+          <p class="eyebrow">Friends</p>
+          <h3>Add friends</h3>
+          <div class="friend-tools">
+            <label class="sr-only" for="friendSearch">Search users</label>
+            <input id="friendSearch" type="search" placeholder="Search by name or email" />
+          </div>
+          <div class="friend-results" id="friendResults"></div>
+          <div class="friend-list" id="friendList"></div>
+        </section>
+
         <section class="panel profile-panel hidden" id="advisorPanel">
           <p class="eyebrow">Advisor Info</p>
           <h3>Your class roster</h3>
@@ -89,6 +115,7 @@
 
     <script src="reset-seed.js?v=20260415seed"></script>
     <script src="feedback-modal.js?v=20260416h"></script>
-    <script src="profile.js?v=20260523a"></script>
+    <script src="cosmetics.js?v=20260524a"></script>
+    <script src="profile.js?v=20260524a"></script>
   </body>
 </html>

@@ -1,36 +1,8 @@
 const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
 
-const SHOP_ITEMS = [
-  {
-    id: "banner-gold",
-    type: "banner",
-    title: "Gold Spotlight Banner",
-    description: "Warm gold profile banner for standout practice streaks.",
-    cost: 80,
-  },
-  {
-    id: "banner-blue",
-    type: "banner",
-    title: "Blue Wave Banner",
-    description: "Cool blue profile banner with a clean competition look.",
-    cost: 80,
-  },
-  {
-    id: "name-glow",
-    type: "nameEffect",
-    title: "Glow Name Effect",
-    description: "Adds a soft gold glow to your profile display name.",
-    cost: 120,
-  },
-  {
-    id: "name-sky",
-    type: "nameEffect",
-    title: "Sky Name Effect",
-    description: "Adds a blue accent treatment to your profile name.",
-    cost: 120,
-  },
-];
+const COSMETICS = window.DEXTRA_COSMETICS;
+const SHOP_ITEMS = COSMETICS?.SHOP_ITEMS || [];
 
 const LEADERBOARD_FILLERS = [
   { name: "KoroKage", bestStreak: 48, coinsEarned: 520 },
@@ -43,7 +15,7 @@ const LEADERBOARD_FILLERS = [
   { name: "PlaneGuy", bestStreak: 20, coinsEarned: 260 },
 ];
 
-const SHOP_ITEM_MAP = new Map(SHOP_ITEMS.map((item) => [item.id, item]));
+const SHOP_ITEM_MAP = COSMETICS?.ITEM_MAP || new Map(SHOP_ITEMS.map((item) => [item.id, item]));
 
 function getCurrentUser() {
   try {
@@ -79,6 +51,12 @@ function normalizeUser(user) {
     ownedCosmetics: [],
     equippedBanner: "",
     equippedNameEffect: "",
+    equippedWhalePrimary: "",
+    equippedWhaleSecondary: "",
+    equippedWhaleAccessory: "",
+    equippedProfileBorder: "",
+    profileImageData: "",
+    friends: [],
     ownedClothing: [],
     equippedClothing: "",
     ...user,
@@ -99,9 +77,7 @@ function formatCoins(value) {
 }
 
 function normalizeCosmetics(user) {
-  user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
-  user.equippedBanner = user.equippedBanner || "";
-  user.equippedNameEffect = user.equippedNameEffect || "";
+  COSMETICS?.normalizeUser(user);
   user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
   user.equippedClothing = user.equippedClothing || "";
   return user;
@@ -367,23 +343,18 @@ function bindHomeSession() {
       return;
     }
 
-    const owned = new Set(fullUser.ownedCosmetics || []);
     shopGrid.innerHTML = SHOP_ITEMS.map((item) => {
-      const isOwned = owned.has(item.id);
-      const isEquipped =
-        (item.type === "banner" && fullUser.equippedBanner === item.id) ||
-        (item.type === "nameEffect" && fullUser.equippedNameEffect === item.id);
+      const isOwned = COSMETICS?.isOwned(fullUser, item) || false;
+      const isEquipped = COSMETICS?.isEquipped(fullUser, item) || false;
       const canBuy = Number(fullUser.coins || 0) >= item.cost;
       const buttonLabel = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - fullUser.coins)}`;
       const action = isOwned ? "equip" : "buy";
 
       return `
         <article class="panel shop-card${isOwned ? " owned" : ""}">
-          <div class="shop-item-preview ${item.id}">
-            <span>${item.type === "banner" ? "Banner" : "Name"}</span>
-          </div>
+          ${COSMETICS?.renderShopPreview(item, fullUser) || ""}
           <div>
-            <p class="eyebrow">${item.type === "banner" ? "Profile Banner" : "Name Effect"}</p>
+            <p class="eyebrow">${escapeHtml(item.categoryLabel || item.type)}</p>
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
           </div>
@@ -405,11 +376,7 @@ function bindHomeSession() {
   }
 
   function equipItem(item) {
-    if (item.type === "banner") {
-      fullUser.equippedBanner = item.id;
-    } else if (item.type === "nameEffect") {
-      fullUser.equippedNameEffect = item.id;
-    }
+    COSMETICS?.equipItem(fullUser, item);
   }
 
   function getCategoryProgress(category) {
