@@ -182,6 +182,7 @@ function bindHomeSession() {
   const headerCoinPill = document.getElementById("headerCoinPill");
   const headerCoinCount = document.getElementById("headerCoinCount");
   const publicNav = document.getElementById("publicNav");
+  const siteHeader = publicNav.closest(".site-header");
   const publicContent = document.getElementById("publicContent");
   const learningHub = document.getElementById("learningHub");
 
@@ -205,6 +206,7 @@ function bindHomeSession() {
     signOutButton.classList.add("hidden");
     signInButton.classList.remove("hidden");
     signUpButton.classList.remove("hidden");
+    siteHeader?.classList.remove("app-header");
     publicNav.classList.remove("app-nav");
     publicNav.innerHTML = `
       <a href="#hero">Home</a>
@@ -223,6 +225,7 @@ function bindHomeSession() {
   signOutButton.classList.remove("hidden");
   signInButton.classList.add("hidden");
   signUpButton.classList.add("hidden");
+  siteHeader?.classList.add("app-header");
   publicNav.classList.add("app-nav");
   let fullUser = getUsers()
     .map(normalizeUser)

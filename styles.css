@@ -73,6 +73,10 @@ body::before {
   z-index: 20;
 }
 
+.site-header.app-header {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
 .brand-mark h1,
 .auth-header h3,
 .section-heading h3,
@@ -101,7 +105,15 @@ body::before {
 }
 
 .top-nav.app-nav {
-  gap: clamp(12px, 2.4vw, 38px);
+  flex-wrap: nowrap;
+  gap: clamp(4px, 0.7vw, 12px);
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-nav.app-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .top-nav a {
@@ -114,10 +126,12 @@ body::before {
 }
 
 .top-nav.app-nav a {
-  padding: 18px 28px;
-  font-size: clamp(1.12rem, 2.4vw, 1.9rem);
+  flex: 0 0 auto;
+  padding: 14px clamp(10px, 1vw, 16px);
+  font-size: clamp(0.95rem, 1.25vw, 1.25rem);
   line-height: 1;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .top-nav a:hover,
@@ -2616,9 +2630,18 @@ body.feedback-open {
     gap: 12px;
   }
 
+  .site-header.app-header {
+    grid-template-columns: 1fr;
+  }
+
   .top-nav,
   .header-actions {
     justify-content: center;
+  }
+
+  .top-nav.app-nav {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .event-list {
@@ -2667,6 +2690,12 @@ body.feedback-open {
     gap: 8px;
   }
 
+  .top-nav.app-nav {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+  }
+
   .top-nav a,
   .header-auth,
   .password-field,
@@ -2679,6 +2708,12 @@ body.feedback-open {
     padding: 8px 10px;
     font-size: 0.88rem;
     text-align: center;
+  }
+
+  .top-nav.app-nav a {
+    width: auto;
+    padding: 12px 14px;
+    font-size: 1rem;
   }
 
   .header-actions {
