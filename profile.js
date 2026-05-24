@@ -1,6 +1,7 @@
 const USERS_KEY = "dextraUsers";
 const CLUBS_KEY = "dextraClubs";
 const SESSION_KEY = "dextraCurrentUser";
+const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 const COSMETICS = window.DEXTRA_COSMETICS;
 
 function getStoredJson(key) {
@@ -64,8 +65,25 @@ function getInitials(name) {
   );
 }
 
-function groupOwnedItems(user, type) {
-  return COSMETICS.ALL_ITEMS.filter((item) => item.type === type && COSMETICS.isOwned(user, item));
+function getItemsByType(type) {
+  return COSMETICS.ALL_ITEMS.filter((item) => item.type === type);
+}
+
+function isAdminUser(user) {
+  return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function shouldIgnoreShortcut(event) {
+  const target = event.target;
+  return (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    target?.tagName === "INPUT" ||
+    target?.tagName === "TEXTAREA" ||
+    target?.tagName === "SELECT" ||
+    target?.isContentEditable
+  );
 }
 
 function bindProfilePage() {
@@ -103,6 +121,8 @@ function bindProfilePage() {
   function persistUsers() {
     users = users.map((user) => (user.email.toLowerCase() === fullUser.email.toLowerCase() ? normalizeUser(fullUser) : normalizeUser(user)));
     saveUsers(users);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(normalizeUser(fullUser)));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(normalizeUser(fullUser)));
   }
 
   function updateStats() {
@@ -153,17 +173,29 @@ function bindProfilePage() {
 
   function renderCustomizerGroup(type, title) {
     const field = COSMETICS.getEquipField(type);
-    const items = groupOwnedItems(fullUser, type);
+    const items = getItemsByType(type);
     return `
       <article class="customizer-group">
         <p class="eyebrow">${COSMETICS.escapeHtml(title)}</p>
         <div class="customizer-options">
           ${items
             .map((item) => {
-              const active = fullUser[field] === item.id;
+              const owned = COSMETICS.isOwned(fullUser, item);
+              const active = owned && fullUser[field] === item.id;
+              const cost = Number(item.cost || 0);
+              const canBuy = !owned && Number(fullUser.coins || 0) >= cost;
+              const missing = Math.max(0, cost - Number(fullUser.coins || 0));
+              const status = owned ? (active ? "Equipped" : "Equip") : canBuy ? `Buy ${formatCoins(cost)}` : `Need ${formatCoins(missing)}`;
+              const actionAttribute = owned
+                ? `data-equip-id="${COSMETICS.escapeHtml(item.id)}"`
+                : canBuy
+                  ? `data-buy-id="${COSMETICS.escapeHtml(item.id)}"`
+                  : "disabled";
               return `
-                <button class="customizer-option ${active ? "active" : ""}" type="button" data-equip-id="${item.id}">
-                  ${COSMETICS.escapeHtml(item.title)}
+                <button class="customizer-option ${active ? "active" : ""} ${owned ? "owned" : "locked"} ${canBuy ? "buyable" : ""}" type="button" ${actionAttribute}>
+                  ${item.color ? `<span class="customizer-swatch" style="--swatch-color: ${COSMETICS.escapeHtml(item.color)}"></span>` : ""}
+                  <span class="customizer-option-title">${COSMETICS.escapeHtml(item.title)}</span>
+                  <span class="customizer-option-status">${status}</span>
                 </button>
               `;
             })
@@ -174,7 +206,24 @@ function bindProfilePage() {
   }
 
   function renderCustomizer() {
+    const missingItems = COSMETICS.SHOP_ITEMS.filter((item) => !COSMETICS.isOwned(fullUser, item));
+    const missingCost = missingItems.reduce((total, item) => total + Number(item.cost || 0), 0);
+    const canBuyAll = missingItems.length > 0 && Number(fullUser.coins || 0) >= missingCost;
+    const buyAllLabel = missingItems.length === 0
+      ? "All customization options owned"
+      : canBuyAll
+        ? `Buy all missing for ${formatCoins(missingCost)}`
+        : `Need ${formatCoins(missingCost - Number(fullUser.coins || 0))} more for all`;
+
     customizerGrid.innerHTML = [
+      `
+        <div class="customizer-toolbar">
+          <span>${formatCoins(fullUser.coins)} coins available</span>
+          <button class="button secondary" type="button" data-buy-all-cosmetics ${canBuyAll ? "" : "disabled"}>
+            ${buyAllLabel}
+          </button>
+        </div>
+      `,
       renderCustomizerGroup("whalePrimary", "Primary Color"),
       renderCustomizerGroup("whaleSecondary", "Secondary Color"),
       renderCustomizerGroup("whaleAccessory", "Accessory"),
@@ -305,6 +354,35 @@ function bindProfilePage() {
   }
 
   customizerGrid.addEventListener("click", (event) => {
+    const buyAllButton = event.target.closest("[data-buy-all-cosmetics]");
+    if (buyAllButton && !buyAllButton.disabled) {
+      const missingItems = COSMETICS.SHOP_ITEMS.filter((item) => !COSMETICS.isOwned(fullUser, item));
+      const missingCost = missingItems.reduce((total, item) => total + Number(item.cost || 0), 0);
+      if (missingItems.length === 0 || Number(fullUser.coins || 0) < missingCost) {
+        return;
+      }
+
+      fullUser.coins = Math.max(0, Number(fullUser.coins || 0) - missingCost);
+      fullUser.ownedCosmetics = [...new Set([...fullUser.ownedCosmetics, ...missingItems.map((item) => item.id)])];
+      renderAll();
+      return;
+    }
+
+    const buyButton = event.target.closest("[data-buy-id]");
+    if (buyButton && !buyButton.disabled) {
+      const item = COSMETICS.getItem(buyButton.dataset.buyId);
+      const cost = Number(item?.cost || 0);
+      if (!item || COSMETICS.isOwned(fullUser, item) || Number(fullUser.coins || 0) < cost) {
+        return;
+      }
+
+      fullUser.coins = Math.max(0, Number(fullUser.coins || 0) - cost);
+      fullUser.ownedCosmetics = [...new Set([...fullUser.ownedCosmetics, item.id])];
+      COSMETICS.equipItem(fullUser, item);
+      renderAll();
+      return;
+    }
+
     const button = event.target.closest("[data-equip-id]");
     if (!button) {
       return;
@@ -317,6 +395,19 @@ function bindProfilePage() {
 
     COSMETICS.equipItem(fullUser, item);
     renderAll();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!isAdminUser(fullUser) || shouldIgnoreShortcut(event)) {
+      return;
+    }
+
+    if (event.key.toLowerCase() === "g") {
+      event.preventDefault();
+      fullUser.coins = Number(fullUser.coins || 0) + 1000;
+      fullUser.coinsEarned = Number(fullUser.coinsEarned || 0) + 1000;
+      renderAll();
+    }
   });
 
   pictureInput.addEventListener("change", () => {

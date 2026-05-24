@@ -1,5 +1,6 @@
 const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
+const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 
 const COSMETICS = window.DEXTRA_COSMETICS;
 const SHOP_ITEMS = COSMETICS?.SHOP_ITEMS || [];
@@ -74,6 +75,23 @@ function escapeHtml(value) {
 
 function formatCoins(value) {
   return Math.max(0, Number(value) || 0).toLocaleString();
+}
+
+function isAdminUser(user) {
+  return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function shouldIgnoreShortcut(event) {
+  const target = event.target;
+  return (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    target?.tagName === "INPUT" ||
+    target?.tagName === "TEXTAREA" ||
+    target?.tagName === "SELECT" ||
+    target?.isContentEditable
+  );
 }
 
 function normalizeCosmetics(user) {
@@ -245,6 +263,8 @@ function bindHomeSession() {
     }
 
     saveUsers(users);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(normalizeUser(fullUser)));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(normalizeUser(fullUser)));
     updateCoinDisplays();
     renderLeaderboard();
     renderShop();
@@ -598,6 +618,19 @@ function bindHomeSession() {
 
     equipItem(item);
     persistFullUser();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!isAdminUser(fullUser) || shouldIgnoreShortcut(event)) {
+      return;
+    }
+
+    if (event.key.toLowerCase() === "g") {
+      event.preventDefault();
+      fullUser.coins = Number(fullUser.coins || 0) + 1000;
+      fullUser.coinsEarned = Number(fullUser.coinsEarned || 0) + 1000;
+      persistFullUser();
+    }
   });
 
   tabButtons.forEach((button) => {

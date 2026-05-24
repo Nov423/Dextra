@@ -1,6 +1,6 @@
 const DEXTRA_DEFAULT_COSMETICS = {
   equippedBanner: "banner-default",
-  equippedNameEffect: "",
+  equippedNameEffect: "name-effect-none",
   equippedWhalePrimary: "whale-primary-ocean",
   equippedWhaleSecondary: "whale-secondary-ice",
   equippedWhaleAccessory: "whale-accessory-none",
@@ -189,10 +189,17 @@ const DEXTRA_DEFAULT_ITEMS = [
     categoryLabel: "Whale Accessory",
     accessory: "none",
   },
+  {
+    id: "name-effect-none",
+    type: "nameEffect",
+    title: "No Name Effect",
+    categoryLabel: "Name Effect",
+  },
 ];
 
 const DEXTRA_ALL_COSMETICS = [...DEXTRA_DEFAULT_ITEMS, ...DEXTRA_COSMETIC_ITEMS];
 const DEXTRA_COSMETIC_MAP = new Map(DEXTRA_ALL_COSMETICS.map((item) => [item.id, item]));
+let dextraWhaleRenderCount = 0;
 
 function dextraEscapeHtml(value) {
   return String(value ?? "")
@@ -248,14 +255,30 @@ function getDextraItem(id) {
   return DEXTRA_COSMETIC_MAP.get(id);
 }
 
+function dextraShadeHex(hex, amount) {
+  const value = String(hex || "").replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(value)) {
+    return "#087cab";
+  }
+
+  const adjusted = [0, 2, 4].map((start) => {
+    const channel = parseInt(value.slice(start, start + 2), 16);
+    const next = amount < 0 ? channel * (1 + amount) : channel + (255 - channel) * amount;
+    return Math.max(0, Math.min(255, Math.round(next))).toString(16).padStart(2, "0");
+  });
+
+  return `#${adjusted.join("")}`;
+}
+
 function getDextraWhaleColors(user, overrides = {}) {
   normalizeDextraCosmetics(user);
   const primaryItem = getDextraItem(overrides.primary || user.equippedWhalePrimary) || getDextraItem("whale-primary-ocean");
   const secondaryItem = getDextraItem(overrides.secondary || user.equippedWhaleSecondary) || getDextraItem("whale-secondary-ice");
   const accessoryItem = getDextraItem(overrides.accessory || user.equippedWhaleAccessory) || getDextraItem("whale-accessory-none");
+  const primary = primaryItem.color || "#19a7d8";
   return {
-    primary: primaryItem.color || "#19a7d8",
-    primaryShadow: "#087cab",
+    primary,
+    primaryShadow: dextraShadeHex(primary, -0.28),
     secondary: secondaryItem.color || "#d9f4ff",
     accessory: accessoryItem.accessory || "none",
   };
@@ -264,25 +287,25 @@ function getDextraWhaleColors(user, overrides = {}) {
 function renderDextraAccessory(type) {
   if (type === "medal") {
     return `
-      <line x1="220" y1="127" x2="220" y2="161" class="whale-accessory-string" />
-      <circle cx="220" cy="174" r="16" class="whale-accessory-fill whale-medal" />
-      <path d="M220 165l3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z" fill="#6b4a07" opacity="0.45" />
+      <line x1="434" y1="331" x2="434" y2="383" class="whale-accessory-string" />
+      <circle cx="434" cy="403" r="22" class="whale-accessory-fill whale-medal" />
+      <path d="M434 390l5 10 11 2-8 8 2 12-10-6-10 6 2-12-8-8 11-2z" fill="#6b4a07" opacity="0.45" />
     `;
   }
 
   if (type === "briefcase") {
     return `
-      <line x1="220" y1="127" x2="220" y2="158" class="whale-accessory-string" />
-      <rect x="198" y="160" width="44" height="32" rx="7" class="whale-accessory-fill whale-briefcase" />
-      <path d="M211 160v-6h18v6" fill="none" stroke="#061528" stroke-width="4" stroke-linecap="round" />
-      <path d="M198 175h44" stroke="#061528" stroke-width="3" opacity="0.28" />
+      <line x1="434" y1="331" x2="434" y2="379" class="whale-accessory-string" />
+      <rect x="402" y="383" width="64" height="44" rx="9" class="whale-accessory-fill whale-briefcase" />
+      <path d="M420 383v-9h28v9" fill="none" stroke="#061528" stroke-width="6" stroke-linecap="round" />
+      <path d="M402 403h64" stroke="#061528" stroke-width="4" opacity="0.28" />
     `;
   }
 
   if (type === "star") {
     return `
-      <line x1="220" y1="127" x2="220" y2="160" class="whale-accessory-string" />
-      <path d="M220 156l6 14 15 1-11 10 3 15-13-8-13 8 3-15-11-10 15-1z" class="whale-accessory-fill whale-star" />
+      <line x1="434" y1="331" x2="434" y2="382" class="whale-accessory-string" />
+      <path d="M434 376l9 20 22 2-16 15 5 22-20-12-20 12 5-22-16-15 22-2z" class="whale-accessory-fill whale-star" />
     `;
   }
 
@@ -291,18 +314,36 @@ function renderDextraAccessory(type) {
 
 function renderDextraWhale(user, overrides = {}) {
   const whale = getDextraWhaleColors(user, overrides);
+  const id = `dextra-whale-${++dextraWhaleRenderCount}`;
   return `
-    <svg class="whale-avatar" viewBox="0 0 300 210" role="img" aria-label="Dextra whale mascot">
-      <path d="M231 78c20-31 40-44 63-45-1 28-14 48-41 58 16 19 19 43 10 70-19-9-32-22-40-40-12 10-28 15-48 14-19 22-53 30-96 22C35 149 8 126 8 96c0-36 26-61 76-72 50-10 96 1 136 33 4 3 8 6 11 21z" fill="${dextraEscapeHtml(whale.primary)}" />
-      <path d="M226 83c20-25 39-40 62-45-3 23-16 41-38 51 15 18 18 39 11 64-17-9-30-21-37-38-11 9-24 14-41 15-7 11-18 20-32 27 34-5 58-17 72-36 8 18 21 31 40 40 9-27 6-51-10-70 27-10 40-30 41-58-24 1-44 16-63 45-1 2-2 3-5 5z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.62" />
-      <path d="M32 118c27 24 76 33 142 17-12 24-43 36-91 32-32-3-54-19-66-48z" fill="${dextraEscapeHtml(whale.secondary)}" opacity="0.96" />
-      <path d="M24 118c52 3 103 4 153 2" fill="none" stroke="#33271f" stroke-width="4" stroke-linecap="round" />
-      <path d="M103 122c1 13 7 26 17 39M81 123c2 16 8 29 18 39M58 122c3 17 10 30 21 39" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.7" />
-      <circle cx="134" cy="103" r="5" fill="#33271f" />
-      <path d="M170 100c0 14-5 23-14 25" fill="none" stroke="#33271f" stroke-width="6" stroke-linecap="round" />
-      <path d="M51 66c16-10 37-16 63-17" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.82" />
-      <path d="M215 117c10 15 23 25 38 30-13 13-27 14-42 3z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.9" />
-      <path d="M126 29c-8-20-20-29-39-31-5 18 3 31 25 40M137 33c8-20 21-30 39-31 7 18-2 32-26 42" fill="${dextraEscapeHtml(whale.primary)}" />
+    <svg class="whale-avatar" viewBox="0 0 658 456" role="img" aria-label="Dextra whale mascot">
+      <defs>
+        <filter id="${id}-primary" color-interpolation-filters="sRGB">
+          <feFlood flood-color="${dextraEscapeHtml(whale.primary)}" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-shadow" color-interpolation-filters="sRGB">
+          <feFlood flood-color="${dextraEscapeHtml(whale.primaryShadow)}" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-secondary" color-interpolation-filters="sRGB">
+          <feFlood flood-color="${dextraEscapeHtml(whale.secondary)}" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-detail" color-interpolation-filters="sRGB">
+          <feFlood flood-color="#33271f" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-highlight" color-interpolation-filters="sRGB">
+          <feFlood flood-color="#ffffff" flood-opacity="0.88" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+      </defs>
+      <image href="assets/whale-primary-mask.png" width="658" height="456" filter="url(#${id}-primary)" />
+      <image href="assets/whale-shadow-mask.png" width="658" height="456" filter="url(#${id}-shadow)" />
+      <image href="assets/whale-secondary-mask.png" width="658" height="456" filter="url(#${id}-secondary)" />
+      <image href="assets/whale-highlight-mask.png" width="658" height="456" filter="url(#${id}-highlight)" />
+      <image href="assets/whale-detail-mask.png" width="658" height="456" filter="url(#${id}-detail)" />
       ${renderDextraAccessory(whale.accessory)}
     </svg>
   `;
