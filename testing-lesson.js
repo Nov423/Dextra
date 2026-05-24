@@ -3,6 +3,7 @@ const USERS_KEY = "dextraUsers";
 const CHECKPOINT_INTERVAL = 5;
 const MOTIVATION_CHECKPOINTS = new Set([5, 15]);
 const SHOP_CHECKPOINT = 10;
+const SHOP_PURCHASE_LIMIT = 3;
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 const WHEEL_REWARDS = [
   { label: "10 coins", coins: 10, weight: 60 },
@@ -420,6 +421,11 @@ function getRewardedQuestions(progress, lessonId) {
   return progress.rewardedQuestions[lessonId];
 }
 
+function pickLessonShopOfferItems(user) {
+  const owned = new Set(user.ownedClothing || []);
+  return shuffleItems(LESSON_SHOP_ITEMS.filter((item) => !owned.has(item.id))).slice(0, SHOP_PURCHASE_LIMIT);
+}
+
 function animateCoinReward(amount, originNode) {
   const target = document.getElementById("lessonCoinPill") || document.getElementById("lessonCoinCount");
   if (!target || !originNode) {
@@ -447,37 +453,59 @@ function animateCoinReward(amount, originNode) {
   }
 }
 
-function renderLessonShop(user, persist) {
+function renderLessonShopItem(user, item) {
   const owned = new Set(user.ownedClothing || []);
+  const isOwned = owned.has(item.id);
+  const isEquipped = user.equippedClothing === item.id;
+  const canBuy = Number(user.coins || 0) >= item.cost;
+  const label = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - user.coins)}`;
+  return `
+    <article class="lesson-shop-item ${item.id}">
+      <div>
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${escapeHtml(item.description)}</span>
+      </div>
+      <button
+        class="button ${isEquipped ? "secondary" : "primary"}"
+        type="button"
+        data-clothing-id="${item.id}"
+        ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
+      >
+        ${label} • ${formatCoins(item.cost)}
+      </button>
+    </article>
+  `;
+}
+
+function renderLessonShop(user, offerItems) {
+  const owned = new Set(user.ownedClothing || []);
+  const ownedItems = LESSON_SHOP_ITEMS.filter((item) => owned.has(item.id));
+  const purchasableItems = offerItems.filter((item) => !owned.has(item.id));
   return `
     <div class="lesson-shop-list">
-      ${LESSON_SHOP_ITEMS.map((item) => {
-        const isOwned = owned.has(item.id);
-        const isEquipped = user.equippedClothing === item.id;
-        const canBuy = Number(user.coins || 0) >= item.cost;
-        const label = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - user.coins)}`;
-        return `
-          <article class="lesson-shop-item ${item.id}">
-            <div>
-              <strong>${escapeHtml(item.title)}</strong>
-              <span>${escapeHtml(item.description)}</span>
+      ${
+        ownedItems.length
+          ? `
+            <div class="lesson-shop-section">
+              <p class="eyebrow">Owned</p>
+              ${ownedItems.map((item) => renderLessonShopItem(user, item)).join("")}
             </div>
-            <button
-              class="button ${isEquipped ? "secondary" : "primary"}"
-              type="button"
-              data-clothing-id="${item.id}"
-              ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
-            >
-              ${label} • ${formatCoins(item.cost)}
-            </button>
-          </article>
-        `;
-      }).join("")}
+          `
+          : ""
+      }
+      <div class="lesson-shop-section">
+        <p class="eyebrow">Available</p>
+        ${
+          purchasableItems.length
+            ? purchasableItems.map((item) => renderLessonShopItem(user, item)).join("")
+            : `<p class="lesson-shop-empty">You already own everything in this shop.</p>`
+        }
+      </div>
     </div>
   `;
 }
 
-function bindLessonShop(container, user, persist, updateCoins, onDone) {
+function bindLessonShop(container, user, persist, updateCoins, offerItems, onDone) {
   let shopResolved = false;
 
   container.addEventListener("click", (event) => {
@@ -516,7 +544,7 @@ function bindLessonShop(container, user, persist, updateCoins, onDone) {
 
     const shopList = container.querySelector(".lesson-shop-list");
     if (shopList) {
-      shopList.outerHTML = renderLessonShop(user, persist);
+      shopList.outerHTML = renderLessonShop(user, offerItems);
     }
     container.querySelectorAll("[data-clothing-id], [data-shop-skip]").forEach((control) => {
       control.disabled = true;
@@ -724,6 +752,7 @@ function bindLesson() {
     feedbackNode.textContent = "";
     const isMotivation = screen.type === "motivation";
     const isShop = screen.type === "shop";
+    const shopOfferItems = isShop ? pickLessonShopOfferItems(user) : [];
     nextButton.textContent = isShop ? "Skip Shop" : "Continue";
     nextButton.disabled = false;
 
@@ -749,13 +778,13 @@ function bindLesson() {
           <h3>${escapeHtml(screen.title)}</h3>
           <p>${escapeHtml(screen.message)}</p>
         </div>
-        ${isShop ? renderLessonShop(user, persistLessonUser) : ""}
+        ${isShop ? renderLessonShop(user, shopOfferItems) : ""}
         ${isShop ? `<button class="button secondary shop-skip-button" type="button" data-shop-skip="true">Skip Shop</button>` : ""}
       </article>
     `;
 
     if (isShop) {
-      bindLessonShop(choiceGrid, user, persistLessonUser, updateLessonCoinDisplay, leaveCheckpointScreen);
+      bindLessonShop(choiceGrid, user, persistLessonUser, updateLessonCoinDisplay, shopOfferItems, leaveCheckpointScreen);
     }
   }
 

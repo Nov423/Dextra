@@ -1575,7 +1575,16 @@ body.feedback-open {
 
 .lesson-shop-list {
   display: grid;
+  gap: 16px;
+}
+
+.lesson-shop-section {
+  display: grid;
   gap: 10px;
+}
+
+.lesson-shop-section .eyebrow {
+  margin: 0;
 }
 
 .lesson-shop-item {
@@ -1598,6 +1607,11 @@ body.feedback-open {
 .lesson-shop-item span {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.lesson-shop-empty {
+  margin: 0;
+  color: var(--muted);
 }
 
 .shop-skip-button,
