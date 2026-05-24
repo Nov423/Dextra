@@ -34,6 +34,8 @@ function normalizeUser(user) {
     ownedCosmetics: [],
     equippedBanner: "",
     equippedNameEffect: "",
+    ownedClothing: [],
+    equippedClothing: "",
     ...user,
   };
 }

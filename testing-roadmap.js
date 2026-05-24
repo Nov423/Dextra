@@ -48,6 +48,10 @@ function getVirtualLessonId(chapter, lessonNumber) {
   return `${baseLesson.id}-v${lessonNumber}`;
 }
 
+function getLessonHref(categoryId, chapterId, lessonNumber) {
+  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523a`;
+}
+
 function getProgressMap(user) {
   return user.testingProgress || {};
 }
@@ -122,10 +126,11 @@ function bindRoadmap() {
         progress.completedLessons.includes(getVirtualLessonId(chapter, lessonIndex + 1))
       ).filter(Boolean).length;
       const isCurrent = progress.activeChapterId === chapter.id;
-      const nextLesson =
-        Array.from({ length: totalLessons }, (_, lessonIndex) => lessonIndex + 1).find(
-          (lessonNumber) => !progress.completedLessons.includes(getVirtualLessonId(chapter, lessonNumber))
-        ) || totalLessons;
+      const nextIncompleteLesson = Array.from({ length: totalLessons }, (_, lessonIndex) => lessonIndex + 1).find(
+        (lessonNumber) => !progress.completedLessons.includes(getVirtualLessonId(chapter, lessonNumber))
+      );
+      const actionLesson = nextIncompleteLesson || 1;
+      const actionLabel = nextIncompleteLesson ? "Continue Lesson" : "Redo Lesson";
       return `
         <article class="panel roadmap-card ${isCurrent ? "current" : ""}">
           <p class="eyebrow">Chapter ${chapterIndex + 1}</p>
@@ -136,11 +141,11 @@ function bindRoadmap() {
               const lessonNumber = lessonIndex + 1;
               const virtualLessonId = getVirtualLessonId(chapter, lessonIndex + 1);
               const done = progress.completedLessons.includes(virtualLessonId);
-              const isNext = lessonNumber === nextLesson && !done;
-              return `<span class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""}" aria-label="Lesson ${lessonNumber}${done ? " completed" : " incomplete"}">L${lessonNumber}</span>`;
+              const isNext = lessonNumber === nextIncompleteLesson && !done;
+              return `<a class="micro-pill ${done ? "done" : ""} ${isNext ? "next" : ""}" href="${getLessonHref(category.id, chapter.id, lessonNumber)}" aria-label="Lesson ${lessonNumber}${done ? " completed, redo" : " incomplete"}">L${lessonNumber}</a>`;
             }).join("")}
           </div>
-          <a class="button primary" href="testing-lesson.html?category=${category.id}&chapter=${chapter.id}&lesson=${nextLesson}&htmlv=20260521g">Start Lesson</a>
+          <a class="button primary" href="${getLessonHref(category.id, chapter.id, actionLesson)}">${actionLabel}</a>
         </article>
       `;
     })

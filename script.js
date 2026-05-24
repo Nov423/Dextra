@@ -79,6 +79,8 @@ function normalizeUser(user) {
     ownedCosmetics: [],
     equippedBanner: "",
     equippedNameEffect: "",
+    ownedClothing: [],
+    equippedClothing: "",
     ...user,
   };
 }
@@ -100,6 +102,8 @@ function normalizeCosmetics(user) {
   user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
   user.equippedBanner = user.equippedBanner || "";
   user.equippedNameEffect = user.equippedNameEffect || "";
+  user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
+  user.equippedClothing = user.equippedClothing || "";
   return user;
 }
 

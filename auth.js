@@ -142,6 +142,8 @@ function createUserRecord(base) {
     ownedCosmetics: [],
     equippedBanner: "",
     equippedNameEffect: "",
+    ownedClothing: [],
+    equippedClothing: "",
     ...base,
   };
 }

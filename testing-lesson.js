@@ -1,5 +1,29 @@
 const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
+const CHECKPOINT_INTERVAL = 5;
+const MOTIVATION_CHECKPOINTS = new Set([5, 15]);
+const SHOP_CHECKPOINT = 10;
+
+const LESSON_SHOP_ITEMS = [
+  {
+    id: "clothing-hoodie",
+    title: "Practice Hoodie",
+    description: "A clean hoodie for your profile closet.",
+    cost: 30,
+  },
+  {
+    id: "clothing-blazer",
+    title: "Gold Blazer",
+    description: "A competition-ready profile jacket.",
+    cost: 45,
+  },
+  {
+    id: "clothing-cap",
+    title: "Dextra Cap",
+    description: "A simple cap for checkpoint rewards.",
+    cost: 20,
+  },
+];
 
 function getJson(key) {
   try {
@@ -29,6 +53,8 @@ function normalizePracticeUser(user) {
   user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
   user.equippedBanner ||= "";
   user.equippedNameEffect ||= "";
+  user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
+  user.equippedClothing ||= "";
   return user;
 }
 
@@ -76,13 +102,19 @@ function playCorrectSound() {
   }
 }
 
-function applyCorrectReward(user) {
-  const reward = getCoinReward();
+function applyCoinReward(user, correctCount) {
+  const reward = Array.from({ length: correctCount }, getCoinReward).reduce(
+    (total, amount) => total + amount,
+    0
+  );
   user.coins = Number(user.coins || 0) + reward;
   user.coinsEarned = Number(user.coinsEarned || 0) + reward;
+  return reward;
+}
+
+function updateCorrectStreak(user) {
   user.currentStreak = Number(user.currentStreak || 0) + 1;
   user.bestStreak = Math.max(Number(user.bestStreak || 0), user.currentStreak);
-  return reward;
 }
 
 function getVirtualLesson(baseLesson, lessonNumber) {
@@ -98,7 +130,11 @@ function getProgress(user, categoryId, firstChapterId) {
     activeChapterId: firstChapterId,
     completedLessons: [],
     termPerformance: {},
+    rewardedCheckpoints: {},
   };
+  user.testingProgress[categoryId].completedLessons ||= [];
+  user.testingProgress[categoryId].termPerformance ||= {};
+  user.testingProgress[categoryId].rewardedCheckpoints ||= {};
   return user.testingProgress[categoryId];
 }
 
@@ -119,11 +155,24 @@ function collectQuestionsFromLessons(lessons) {
   return lessons.flatMap((lesson) => lesson.questions || []);
 }
 
+function shuffleItems(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function getQuestionKey(question) {
+  return question.prompt.trim().toLowerCase();
+}
+
 function buildQuestionSet(baseLesson, progress, backupQuestions = []) {
   const uniqueQuestions = [];
   const seenPrompts = new Set();
   [...(baseLesson.questions || []), ...backupQuestions].forEach((question) => {
-    const promptKey = question.prompt.trim().toLowerCase();
+    const promptKey = getQuestionKey(question);
     if (!seenPrompts.has(promptKey)) {
       seenPrompts.add(promptKey);
       uniqueQuestions.push(question);
@@ -139,7 +188,12 @@ function buildQuestionSet(baseLesson, progress, backupQuestions = []) {
       weight: scoreForTerm(progress, question.focusTerm) + (20 - index),
     }))
     .sort((left, right) => right.weight - left.weight)
-    .slice(0, 20);
+    .slice(0, 20)
+    .map((question) => {
+      const clone = structuredClone(question);
+      delete clone.weight;
+      return clone;
+    });
 }
 
 function splitExplanationSentences(explanation) {
@@ -191,11 +245,19 @@ function getAnswerFeedback(question, selectedAnswer, coinReward = 0) {
   const explanation = getConciseExplanation(question, selectedAnswer);
 
   if (selectedAnswer === question.answer) {
-    const rewardText = coinReward ? ` +${coinReward} coins.` : "";
-    return `Correct: "${correctChoice}".${rewardText} ${explanation}`;
+    return `Correct: "${correctChoice}". ${explanation}`;
   }
 
   return `Not quite. You chose "${selectedChoice}". Correct: "${correctChoice}". ${explanation}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function persistUser(user) {
@@ -205,6 +267,135 @@ function persistUser(user) {
     users[index] = user;
     saveUsers(users);
   }
+}
+
+function getRewardedCheckpoints(progress, lessonId) {
+  progress.rewardedCheckpoints ||= {};
+  progress.rewardedCheckpoints[lessonId] ||= [];
+  return progress.rewardedCheckpoints[lessonId];
+}
+
+function awardCheckpointCoins(user, progress, lessonId, checkpointNumber, correctCount, canEarnCoins) {
+  const rewardedCheckpoints = getRewardedCheckpoints(progress, lessonId);
+  const alreadyRewarded = rewardedCheckpoints.includes(checkpointNumber);
+
+  if (!canEarnCoins || alreadyRewarded) {
+    return {
+      reward: 0,
+      message: alreadyRewarded || !canEarnCoins ? "Redo run: no extra coins for this checkpoint." : "",
+    };
+  }
+
+  rewardedCheckpoints.push(checkpointNumber);
+
+  if (!correctCount) {
+    return {
+      reward: 0,
+      message: "Checkpoint reached. No coins this time.",
+    };
+  }
+
+  const reward = applyCoinReward(user, correctCount);
+  return {
+    reward,
+    message: `Checkpoint: ${correctCount} correct in this set, +${reward} coins.`,
+  };
+}
+
+function createLessonPopup({ title, message, variant = "motivation", body = "" }) {
+  document.querySelectorAll(".lesson-popup").forEach((popup) => popup.remove());
+
+  const wrapper = document.createElement("div");
+  wrapper.className = `lesson-popup lesson-popup-${variant}`;
+  wrapper.innerHTML = `
+    <div class="lesson-popup-backdrop" data-popup-close="true"></div>
+    <section class="lesson-popup-card panel" role="dialog" aria-modal="true">
+      <button class="feedback-close" type="button" aria-label="Close popup" data-popup-close="true">×</button>
+      <div class="motivation-image" aria-hidden="true">
+        <span class="motivation-face"></span>
+        <strong>You got this!</strong>
+      </div>
+      <div class="lesson-popup-copy">
+        <p class="eyebrow">${escapeHtml(variant === "shop" ? "Checkpoint Shop" : "Keep Going")}</p>
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(message)}</p>
+      </div>
+      ${body}
+    </section>
+  `;
+
+  wrapper.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLElement && event.target.dataset.popupClose === "true") {
+      wrapper.remove();
+    }
+  });
+
+  document.body.appendChild(wrapper);
+  return wrapper;
+}
+
+function renderLessonShop(user, persist) {
+  const owned = new Set(user.ownedClothing || []);
+  return `
+    <div class="lesson-shop-list">
+      ${LESSON_SHOP_ITEMS.map((item) => {
+        const isOwned = owned.has(item.id);
+        const isEquipped = user.equippedClothing === item.id;
+        const canBuy = Number(user.coins || 0) >= item.cost;
+        const label = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - user.coins)}`;
+        return `
+          <article class="lesson-shop-item ${item.id}">
+            <div>
+              <strong>${escapeHtml(item.title)}</strong>
+              <span>${escapeHtml(item.description)}</span>
+            </div>
+            <button
+              class="button ${isEquipped ? "secondary" : "primary"}"
+              type="button"
+              data-clothing-id="${item.id}"
+              ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
+            >
+              ${label} • ${formatCoins(item.cost)}
+            </button>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function bindLessonShop(popup, user, persist, updateCoins) {
+  popup.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-clothing-id]");
+    if (!button || button.disabled) {
+      return;
+    }
+
+    const item = LESSON_SHOP_ITEMS.find((entry) => entry.id === button.dataset.clothingId);
+    if (!item) {
+      return;
+    }
+
+    user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
+    const ownsItem = user.ownedClothing.includes(item.id);
+
+    if (!ownsItem) {
+      if (Number(user.coins || 0) < item.cost) {
+        return;
+      }
+      user.coins = Math.max(0, Number(user.coins || 0) - item.cost);
+      user.ownedClothing.push(item.id);
+    }
+
+    user.equippedClothing = item.id;
+    persist();
+    updateCoins(user);
+
+    const shopList = popup.querySelector(".lesson-shop-list");
+    if (shopList) {
+      shopList.outerHTML = renderLessonShop(user, persist);
+    }
+  });
 }
 
 function getNextChapterId(category, chapterId) {
@@ -247,28 +438,139 @@ function bindLesson() {
   const lesson = getVirtualLesson(baseLesson, lessonNumber);
   const progress = getProgress(user, category.id, category.chapters[0]?.id || chapter.id);
   const backupQuestions = collectQuestionsFromLessons(category.chapters.flatMap((entry) => entry.lessons));
-  const questions = buildQuestionSet(baseLesson, progress, backupQuestions);
+  const questions = shuffleItems(buildQuestionSet(baseLesson, progress, backupQuestions));
   const questionTotal = questions.length;
+  const canEarnCoins = !progress.completedLessons.includes(lesson.virtualId);
+  getRewardedCheckpoints(progress, lesson.virtualId);
 
   let currentQuestionIndex = 0;
   let selectedAnswer = null;
+  let activeQuestions = questions;
+  let isRerunMode = false;
+  let rerunRound = 0;
+  let checkpointCorrectCount = 0;
+  let missedQuestions = [];
 
   const promptNode = document.getElementById("questionPrompt");
   const choiceGrid = document.getElementById("choiceGrid");
   const feedbackNode = document.getElementById("lessonFeedback");
   const nextButton = document.getElementById("nextQuestionButton");
+  const modeLabel = document.getElementById("lessonModeLabel");
 
   document.getElementById("lessonCategoryCode").textContent = category.code;
   document.getElementById("lessonTitle").textContent = lesson.virtualTitle;
-  document.getElementById("lessonMeta").textContent = `${chapter.title} • ${questionTotal} adaptive questions`;
+  document.getElementById("lessonMeta").textContent = `${chapter.title} • ${questionTotal} randomized questions${
+    canEarnCoins ? "" : " • redo run, no coins"
+  }`;
+
+  function persistLessonUser() {
+    user.testingProgress[category.id] = progress;
+    persistUser(user);
+  }
+
+  function setNextButtonText() {
+    if (!isRerunMode && currentQuestionIndex === questionTotal - 1) {
+      nextButton.textContent = missedQuestions.length ? "Review Missed Questions" : "Finish Lesson";
+      return;
+    }
+
+    if (isRerunMode && missedQuestions.length === 0) {
+      nextButton.textContent = "Finish Lesson";
+      return;
+    }
+
+    nextButton.textContent = "Next Question";
+  }
+
+  function showCheckpointPopup(checkpointNumber, rewardResult) {
+    const rewardLine = rewardResult.message ? `${rewardResult.message} ` : "";
+
+    if (MOTIVATION_CHECKPOINTS.has(checkpointNumber)) {
+      createLessonPopup({
+        title: "You got this!",
+        message: `${rewardLine}Keep going and clean up anything you miss at the end.`,
+        variant: "motivation",
+      });
+      return;
+    }
+
+    if (checkpointNumber === SHOP_CHECKPOINT) {
+      const popup = createLessonPopup({
+        title: "Checkpoint shop",
+        message: `${rewardLine}Use your coins on clothing items, or save them for later.`,
+        variant: "shop",
+        body: renderLessonShop(user, persistLessonUser),
+      });
+      bindLessonShop(popup, user, persistLessonUser, updateLessonCoinDisplay);
+    }
+  }
+
+  function startRerunMode() {
+    isRerunMode = true;
+    rerunRound += 1;
+    activeQuestions = shuffleItems(missedQuestions);
+    currentQuestionIndex = 0;
+    renderQuestion();
+  }
+
+  function finishLesson() {
+    if (!progress.completedLessons.includes(lesson.virtualId)) {
+      progress.completedLessons.push(lesson.virtualId);
+      user.testsTaken = (user.testsTaken || 0) + 1;
+    }
+    progress.activeChapterId = lessonNumber >= 10 ? getNextChapterId(category, chapter.id) : chapter.id;
+    persistLessonUser();
+    window.location.href = `testing-roadmap.html?category=${category.id}`;
+  }
+
+  function goToNextQuestion() {
+    if (!isRerunMode) {
+      if (currentQuestionIndex === questionTotal - 1) {
+        if (missedQuestions.length) {
+          startRerunMode();
+        } else {
+          finishLesson();
+        }
+        return;
+      }
+
+      currentQuestionIndex += 1;
+      renderQuestion();
+      return;
+    }
+
+    if (!missedQuestions.length) {
+      finishLesson();
+      return;
+    }
+
+    if (currentQuestionIndex < activeQuestions.length - 1) {
+      currentQuestionIndex += 1;
+      renderQuestion();
+      return;
+    }
+
+    activeQuestions = shuffleItems(missedQuestions);
+    currentQuestionIndex = 0;
+    rerunRound += 1;
+    renderQuestion();
+  }
 
   function renderQuestion() {
-    const question = questions[currentQuestionIndex];
+    const question = activeQuestions[currentQuestionIndex];
     selectedAnswer = null;
     promptNode.textContent = question.prompt;
     feedbackNode.textContent = "";
-    nextButton.textContent = currentQuestionIndex === questionTotal - 1 ? "Finish Lesson" : "Next Question";
+    setNextButtonText();
     nextButton.disabled = true;
+
+    if (isRerunMode) {
+      modeLabel.textContent = `Rerun of a missed question • ${missedQuestions.length} left`;
+      modeLabel.classList.add("rerun-active");
+    } else {
+      modeLabel.textContent = `Question ${currentQuestionIndex + 1} of ${questionTotal}`;
+      modeLabel.classList.remove("rerun-active");
+    }
 
     choiceGrid.innerHTML = question.choices
       .map(
@@ -288,14 +590,46 @@ function bindLesson() {
 
         selectedAnswer = Number(button.dataset.choice);
         const correct = selectedAnswer === question.answer;
-        const coinReward = correct ? applyCorrectReward(user) : 0;
+        const questionKey = getQuestionKey(question);
+        let checkpointMessage = "";
+
         if (correct) {
           playCorrectSound();
+          updateCorrectStreak(user);
+          if (isRerunMode) {
+            missedQuestions = missedQuestions.filter((item) => getQuestionKey(item) !== questionKey);
+            modeLabel.textContent = missedQuestions.length
+              ? `Rerun of a missed question • ${missedQuestions.length} left`
+              : "All missed questions corrected";
+          }
         } else {
           user.currentStreak = 0;
+          if (!isRerunMode && !missedQuestions.some((item) => getQuestionKey(item) === questionKey)) {
+            missedQuestions.push(question);
+          }
         }
+
+        if (!isRerunMode) {
+          checkpointCorrectCount += correct ? 1 : 0;
+          const checkpointNumber = currentQuestionIndex + 1;
+
+          if (checkpointNumber % CHECKPOINT_INTERVAL === 0) {
+            const rewardResult = awardCheckpointCoins(
+              user,
+              progress,
+              lesson.virtualId,
+              checkpointNumber,
+              checkpointCorrectCount,
+              canEarnCoins
+            );
+            checkpointCorrectCount = 0;
+            checkpointMessage = rewardResult.message ? ` ${rewardResult.message}` : "";
+            showCheckpointPopup(checkpointNumber, rewardResult);
+          }
+        }
+
         updateTermPerformance(progress, question.focusTerm, correct);
-        persistUser(user);
+        persistLessonUser();
         updateLessonCoinDisplay(user);
 
         choiceGrid.querySelectorAll("[data-choice]").forEach((choiceButton) => {
@@ -308,7 +642,8 @@ function bindLesson() {
           }
         });
 
-        feedbackNode.textContent = getAnswerFeedback(question, selectedAnswer, coinReward);
+        feedbackNode.textContent = `${getAnswerFeedback(question, selectedAnswer)}${checkpointMessage}`;
+        setNextButtonText();
         nextButton.disabled = false;
       });
     });
@@ -319,20 +654,7 @@ function bindLesson() {
       return;
     }
 
-    if (currentQuestionIndex === questionTotal - 1) {
-      if (!progress.completedLessons.includes(lesson.virtualId)) {
-        progress.completedLessons.push(lesson.virtualId);
-        user.testsTaken = (user.testsTaken || 0) + 1;
-      }
-      progress.activeChapterId = lessonNumber >= 10 ? getNextChapterId(category, chapter.id) : chapter.id;
-      user.testingProgress[category.id] = progress;
-      persistUser(user);
-      window.location.href = `testing-roadmap.html?category=${category.id}`;
-      return;
-    }
-
-    currentQuestionIndex += 1;
-    renderQuestion();
+    goToNextQuestion();
   });
 
   document.getElementById("lessonSignOutButton").addEventListener("click", () => {
