@@ -3,11 +3,12 @@ const DEXTRA_RESET_VERSION = "20260415-single-seed";
 
 const seededUsers = [
   {
-    name: "Single Plan User",
+    name: "Admin",
     email: "123@gmail.com",
+    username: "Admin",
     password: "12345678",
     plan: "single",
-    role: "member",
+    role: "admin",
     testsTaken: 0,
     roleplaysDone: 0,
     writtensGraded: 0,

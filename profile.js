@@ -2,6 +2,8 @@ const USERS_KEY = "dextraUsers";
 const CLUBS_KEY = "dextraClubs";
 const SESSION_KEY = "dextraCurrentUser";
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+const ADMIN_USERNAME = "admin";
+const ADMIN_DISPLAY_USERNAME = "Admin";
 const COSMETICS = window.DEXTRA_COSMETICS;
 
 function getStoredJson(key) {
@@ -56,6 +58,10 @@ function normalizeUsername(value) {
 }
 
 function fallbackUsername(user) {
+  if (ADMIN_EMAILS.has(String(user?.email || "").toLowerCase())) {
+    return ADMIN_USERNAME;
+  }
+
   const source = String(user?.email || user?.name || "dextra-user").split("@")[0];
   const cleaned = source.toLowerCase().replace(/[^a-z0-9._-]+/g, "").slice(0, 20);
   return cleaned || "dextra-user";
@@ -63,6 +69,14 @@ function fallbackUsername(user) {
 
 function getProfileUsername(user) {
   return normalizeUsername(user?.username) || fallbackUsername(user);
+}
+
+function getDisplayUsername(user) {
+  if (ADMIN_EMAILS.has(String(user?.email || "").toLowerCase())) {
+    return ADMIN_DISPLAY_USERNAME;
+  }
+
+  return user?.username || getProfileUsername(user);
 }
 
 function formatCoins(value) {
@@ -180,7 +194,7 @@ function bindProfilePage() {
 
   function renderProfileHero() {
     applyProfileClasses();
-    namePreview.textContent = `@${getProfileUsername(fullUser)}`;
+    namePreview.textContent = `@${getDisplayUsername(fullUser)}`;
     whalePreview.innerHTML = COSMETICS.renderWhale(fullUser);
     initialsPreview.textContent = getInitials(fullUser.name);
     if (document.activeElement !== profileMessageInput) {
@@ -270,7 +284,7 @@ function bindProfilePage() {
               <article class="friend-row">
                 <span class="friend-avatar">${friend.profileImageData ? `<img src="${friend.profileImageData}" alt="" />` : COSMETICS.renderWhale(friend)}</span>
                 <span>
-                  <strong>@${COSMETICS.escapeHtml(getProfileUsername(friend))}</strong>
+                  <strong>@${COSMETICS.escapeHtml(getDisplayUsername(friend))}</strong>
                   <small>${COSMETICS.escapeHtml(friend.email)}</small>
                 </span>
               </article>
@@ -301,7 +315,7 @@ function bindProfilePage() {
               <article class="friend-row">
                 <span class="friend-avatar">${user.profileImageData ? `<img src="${user.profileImageData}" alt="" />` : COSMETICS.renderWhale(user)}</span>
                 <span>
-                  <strong>@${COSMETICS.escapeHtml(getProfileUsername(user))}</strong>
+                  <strong>@${COSMETICS.escapeHtml(getDisplayUsername(user))}</strong>
                   <small>${COSMETICS.escapeHtml(user.email)}</small>
                 </span>
                 <button class="button secondary" type="button" data-add-friend="${COSMETICS.escapeHtml(user.email)}">Add</button>

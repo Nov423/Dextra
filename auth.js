@@ -2,6 +2,8 @@ const USERS_KEY = "dextraUsers";
 const CLUBS_KEY = "dextraClubs";
 const CLUB_CONFIRMATION_KEY = "dextraClubConfirmation";
 const SESSION_KEY = "dextraCurrentUser";
+const ADMIN_EMAIL = "123@gmail.com";
+const ADMIN_USERNAME = "admin";
 
 const CODE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*?";
 
@@ -88,6 +90,10 @@ function normalizeUsername(value) {
 }
 
 function fallbackUsername(user) {
+  if (String(user?.email || "").toLowerCase() === ADMIN_EMAIL) {
+    return ADMIN_USERNAME;
+  }
+
   const source = String(user?.email || user?.name || "dextra-user").split("@")[0];
   const cleaned = source.toLowerCase().replace(/[^a-z0-9._-]+/g, "").slice(0, 20);
   return cleaned || "dextra-user";
