@@ -509,13 +509,6 @@ function bindLessonShop(container, user, persist, updateCoins, offerItems, onDon
   let shopResolved = false;
 
   container.addEventListener("click", (event) => {
-    const skipButton = event.target.closest("[data-shop-skip]");
-    if (skipButton) {
-      shopResolved = true;
-      onDone();
-      return;
-    }
-
     const button = event.target.closest("[data-clothing-id]");
     if (!button || button.disabled || shopResolved) {
       return;
@@ -546,7 +539,7 @@ function bindLessonShop(container, user, persist, updateCoins, offerItems, onDon
     if (shopList) {
       shopList.outerHTML = renderLessonShop(user, offerItems);
     }
-    container.querySelectorAll("[data-clothing-id], [data-shop-skip]").forEach((control) => {
+    container.querySelectorAll("[data-clothing-id]").forEach((control) => {
       control.disabled = true;
     });
     window.setTimeout(onDone, 240);
@@ -779,7 +772,6 @@ function bindLesson() {
           <p>${escapeHtml(screen.message)}</p>
         </div>
         ${isShop ? renderLessonShop(user, shopOfferItems) : ""}
-        ${isShop ? `<button class="button secondary shop-skip-button" type="button" data-shop-skip="true">Skip Shop</button>` : ""}
       </article>
     `;
 

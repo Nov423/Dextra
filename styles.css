@@ -1614,7 +1614,6 @@ body.feedback-open {
   color: var(--muted);
 }
 
-.shop-skip-button,
 .wheel-spin-button {
   width: fit-content;
 }
