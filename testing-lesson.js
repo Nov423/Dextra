@@ -302,38 +302,6 @@ function awardCheckpointCoins(user, progress, lessonId, checkpointNumber, correc
   };
 }
 
-function createLessonPopup({ title, message, variant = "motivation", body = "" }) {
-  document.querySelectorAll(".lesson-popup").forEach((popup) => popup.remove());
-
-  const wrapper = document.createElement("div");
-  wrapper.className = `lesson-popup lesson-popup-${variant}`;
-  wrapper.innerHTML = `
-    <div class="lesson-popup-backdrop" data-popup-close="true"></div>
-    <section class="lesson-popup-card panel" role="dialog" aria-modal="true">
-      <button class="feedback-close" type="button" aria-label="Close popup" data-popup-close="true">×</button>
-      <div class="motivation-image" aria-hidden="true">
-        <span class="motivation-face"></span>
-        <strong>You got this!</strong>
-      </div>
-      <div class="lesson-popup-copy">
-        <p class="eyebrow">${escapeHtml(variant === "shop" ? "Checkpoint Shop" : "Keep Going")}</p>
-        <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(message)}</p>
-      </div>
-      ${body}
-    </section>
-  `;
-
-  wrapper.addEventListener("click", (event) => {
-    if (event.target instanceof HTMLElement && event.target.dataset.popupClose === "true") {
-      wrapper.remove();
-    }
-  });
-
-  document.body.appendChild(wrapper);
-  return wrapper;
-}
-
 function renderLessonShop(user, persist) {
   const owned = new Set(user.ownedClothing || []);
   return `
@@ -364,8 +332,8 @@ function renderLessonShop(user, persist) {
   `;
 }
 
-function bindLessonShop(popup, user, persist, updateCoins) {
-  popup.addEventListener("click", (event) => {
+function bindLessonShop(container, user, persist, updateCoins) {
+  container.addEventListener("click", (event) => {
     const button = event.target.closest("[data-clothing-id]");
     if (!button || button.disabled) {
       return;
@@ -391,7 +359,7 @@ function bindLessonShop(popup, user, persist, updateCoins) {
     persist();
     updateCoins(user);
 
-    const shopList = popup.querySelector(".lesson-shop-list");
+    const shopList = container.querySelector(".lesson-shop-list");
     if (shopList) {
       shopList.outerHTML = renderLessonShop(user, persist);
     }
@@ -450,6 +418,8 @@ function bindLesson() {
   let rerunRound = 0;
   let checkpointCorrectCount = 0;
   let missedQuestions = [];
+  let currentScreen = "question";
+  const checkpointScreens = [];
 
   const promptNode = document.getElementById("questionPrompt");
   const choiceGrid = document.getElementById("choiceGrid");
@@ -482,27 +452,38 @@ function bindLesson() {
     nextButton.textContent = "Next Question";
   }
 
-  function showCheckpointPopup(checkpointNumber, rewardResult) {
-    const rewardLine = rewardResult.message ? `${rewardResult.message} ` : "";
+  function queueCheckpointScreen(checkpointNumber, rewardResult) {
+    const rewardLine = rewardResult.message || "";
 
     if (MOTIVATION_CHECKPOINTS.has(checkpointNumber)) {
-      createLessonPopup({
+      checkpointScreens.push({
+        checkpointNumber,
+        type: "motivation",
         title: "You got this!",
-        message: `${rewardLine}Keep going and clean up anything you miss at the end.`,
-        variant: "motivation",
+        message: "Keep going and clean up anything you miss at the end.",
+        rewardLine,
       });
       return;
     }
 
     if (checkpointNumber === SHOP_CHECKPOINT) {
-      const popup = createLessonPopup({
+      checkpointScreens.push({
+        checkpointNumber,
+        type: "shop",
         title: "Checkpoint shop",
-        message: `${rewardLine}Use your coins on clothing items, or save them for later.`,
-        variant: "shop",
-        body: renderLessonShop(user, persistLessonUser),
+        message: "Use your coins on clothing items, or save them for later.",
+        rewardLine,
       });
-      bindLessonShop(popup, user, persistLessonUser, updateLessonCoinDisplay);
+      return;
     }
+
+    checkpointScreens.push({
+      checkpointNumber,
+      type: "summary",
+      title: "Checkpoint complete",
+      message: "Keep moving. Missed questions will come back at the end.",
+      rewardLine,
+    });
   }
 
   function startRerunMode() {
@@ -524,6 +505,21 @@ function bindLesson() {
   }
 
   function goToNextQuestion() {
+    if (currentScreen === "checkpoint") {
+      currentScreen = "question";
+      continueAfterQuestion();
+      return;
+    }
+
+    if (checkpointScreens.length) {
+      renderCheckpointScreen(checkpointScreens.shift());
+      return;
+    }
+
+    continueAfterQuestion();
+  }
+
+  function continueAfterQuestion() {
     if (!isRerunMode) {
       if (currentQuestionIndex === questionTotal - 1) {
         if (missedQuestions.length) {
@@ -556,7 +552,50 @@ function bindLesson() {
     renderQuestion();
   }
 
+  function renderCheckpointScreen(screen) {
+    currentScreen = "checkpoint";
+    selectedAnswer = "checkpoint";
+    modeLabel.textContent = `Checkpoint after question ${screen.checkpointNumber}`;
+    modeLabel.classList.toggle("rerun-active", false);
+    promptNode.textContent = screen.title;
+    feedbackNode.textContent = "";
+    nextButton.textContent =
+      screen.checkpointNumber === questionTotal && missedQuestions.length
+        ? "Review Missed Questions"
+        : "Continue";
+    nextButton.disabled = false;
+
+    const isMotivation = screen.type === "motivation";
+    const isShop = screen.type === "shop";
+    choiceGrid.innerHTML = `
+      <article class="lesson-checkpoint-card ${isShop ? "shop-checkpoint" : ""}">
+        ${
+          isMotivation
+            ? `
+              <div class="motivation-image" aria-hidden="true">
+                <span class="motivation-face"></span>
+                <strong>You got this!</strong>
+              </div>
+            `
+            : ""
+        }
+        <div class="lesson-checkpoint-copy">
+          <p class="eyebrow">${escapeHtml(isShop ? "Checkpoint Shop" : "Checkpoint")}</p>
+          <h3>${escapeHtml(screen.title)}</h3>
+          ${screen.rewardLine ? `<p class="checkpoint-reward">${escapeHtml(screen.rewardLine)}</p>` : ""}
+          <p>${escapeHtml(screen.message)}</p>
+        </div>
+        ${isShop ? renderLessonShop(user, persistLessonUser) : ""}
+      </article>
+    `;
+
+    if (isShop) {
+      bindLessonShop(choiceGrid, user, persistLessonUser, updateLessonCoinDisplay);
+    }
+  }
+
   function renderQuestion() {
+    currentScreen = "question";
     const question = activeQuestions[currentQuestionIndex];
     selectedAnswer = null;
     promptNode.textContent = question.prompt;
@@ -624,7 +663,7 @@ function bindLesson() {
             );
             checkpointCorrectCount = 0;
             checkpointMessage = rewardResult.message ? ` ${rewardResult.message}` : "";
-            showCheckpointPopup(checkpointNumber, rewardResult);
+            queueCheckpointScreen(checkpointNumber, rewardResult);
           }
         }
 
@@ -650,7 +689,7 @@ function bindLesson() {
   }
 
   nextButton.addEventListener("click", () => {
-    if (selectedAnswer === null) {
+    if (currentScreen === "question" && selectedAnswer === null) {
       return;
     }
 

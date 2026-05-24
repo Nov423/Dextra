@@ -1469,33 +1469,21 @@ body.feedback-open {
   margin-top: 18px;
 }
 
-.lesson-popup {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
-
-.lesson-popup-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(1, 9, 22, 0.72);
-  backdrop-filter: blur(7px);
-}
-
-.lesson-popup-card {
-  position: relative;
-  width: min(560px, 100%);
+.lesson-checkpoint-card {
+  width: 100%;
   display: grid;
   gap: 18px;
-  padding: 28px;
+  padding: 20px;
+  border: 1px solid rgba(255, 191, 61, 0.22);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 191, 61, 0.1), rgba(83, 193, 255, 0.07)),
+    rgba(255, 255, 255, 0.04);
   overflow: hidden;
 }
 
-.lesson-popup-card .feedback-close {
-  z-index: 2;
+.lesson-checkpoint-card.shop-checkpoint {
+  border-color: rgba(83, 193, 255, 0.26);
 }
 
 .motivation-image {
@@ -1533,19 +1521,24 @@ body.feedback-open {
   text-shadow: 0 3px 18px rgba(1, 9, 22, 0.55);
 }
 
-.lesson-popup-copy {
+.lesson-checkpoint-copy {
   display: grid;
   gap: 6px;
 }
 
-.lesson-popup-copy h3,
-.lesson-popup-copy p {
+.lesson-checkpoint-copy h3,
+.lesson-checkpoint-copy p {
   margin: 0;
 }
 
-.lesson-popup-copy p:last-child {
+.lesson-checkpoint-copy p:last-child {
   color: var(--muted);
   line-height: 1.6;
+}
+
+.checkpoint-reward {
+  color: var(--gold-soft);
+  font-weight: 800;
 }
 
 .lesson-shop-list {
@@ -2027,7 +2020,7 @@ body.feedback-open {
     flex-direction: column;
   }
 
-  .lesson-popup-card {
+  .lesson-checkpoint-card {
     padding: 20px;
   }
 
