@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260524b" />
+    <link rel="stylesheet" href="styles.css?v=20260524c" />
   </head>
   <body>
     <div class="page-shell">
@@ -46,15 +46,15 @@
         </section>
 
         <section class="profile-banner-preview profile-hero-card" id="profileBannerPreview">
-          <div class="profile-picture-frame" id="profilePictureFrame">
+          <label class="profile-picture-frame" id="profilePictureFrame" for="profilePictureInput" aria-label="Upload profile picture" tabindex="0">
             <img class="profile-picture hidden" id="profilePicturePreview" alt="" />
             <span id="profileInitialsPreview">D</span>
-          </div>
+          </label>
+          <input class="sr-only" id="profilePictureInput" type="file" accept="image/*" />
           <div class="profile-whale-stage" id="profileWhalePreview"></div>
           <div class="profile-identity-copy">
             <span id="profileNamePreview">Profile</span>
-            <label class="button secondary profile-upload-button" for="profilePictureInput">Upload Picture</label>
-            <input class="sr-only" id="profilePictureInput" type="file" accept="image/*" />
+            <input id="profileMessageInput" class="profile-message-input" type="text" maxlength="80" placeholder="Add a profile message" aria-label="Profile message" />
           </div>
         </section>
 
@@ -116,6 +116,6 @@
     <script src="reset-seed.js?v=20260415seed"></script>
     <script src="feedback-modal.js?v=20260416h"></script>
     <script src="cosmetics.js?v=20260524b"></script>
-    <script src="profile.js?v=20260524b"></script>
+    <script src="profile.js?v=20260524c"></script>
   </body>
 </html>

@@ -41,6 +41,7 @@ function normalizeUser(user) {
     equippedWhaleAccessory: "",
     equippedProfileBorder: "",
     profileImageData: "",
+    profileMessage: "Ready for DECA practice.",
     friends: [],
     ownedClothing: [],
     equippedClothing: "",
@@ -48,6 +49,20 @@ function normalizeUser(user) {
   };
   COSMETICS?.normalizeUser(normalized);
   return normalized;
+}
+
+function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function fallbackUsername(user) {
+  const source = String(user?.email || user?.name || "dextra-user").split("@")[0];
+  const cleaned = source.toLowerCase().replace(/[^a-z0-9._-]+/g, "").slice(0, 20);
+  return cleaned || "dextra-user";
+}
+
+function getProfileUsername(user) {
+  return normalizeUsername(user?.username) || fallbackUsername(user);
 }
 
 function formatCoins(value) {
@@ -96,7 +111,13 @@ function bindProfilePage() {
 
   let users = getStoredJson(USERS_KEY).map(normalizeUser);
   const clubs = getStoredJson(CLUBS_KEY);
-  const fullUser = users.find((user) => user.email.toLowerCase() === currentUser.email.toLowerCase());
+  const sessionEmail = String(currentUser.email || "").toLowerCase();
+  const sessionUsername = normalizeUsername(currentUser.username);
+  const fullUser = users.find((user) => {
+    const emailMatch = sessionEmail && String(user.email || "").toLowerCase() === sessionEmail;
+    const usernameMatch = sessionUsername && getProfileUsername(user) === sessionUsername;
+    return emailMatch || usernameMatch;
+  });
 
   if (!fullUser) {
     window.location.href = "sign-in.html";
@@ -113,12 +134,15 @@ function bindProfilePage() {
   const picturePreview = document.getElementById("profilePicturePreview");
   const initialsPreview = document.getElementById("profileInitialsPreview");
   const pictureInput = document.getElementById("profilePictureInput");
+  const profileMessageInput = document.getElementById("profileMessageInput");
   const customizerGrid = document.getElementById("customizerGrid");
   const friendSearch = document.getElementById("friendSearch");
   const friendResults = document.getElementById("friendResults");
   const friendList = document.getElementById("friendList");
 
   function persistUsers() {
+    fullUser.username = getProfileUsername(fullUser);
+    fullUser.profileMessage = String(fullUser.profileMessage || "").slice(0, 80);
     users = users.map((user) => (user.email.toLowerCase() === fullUser.email.toLowerCase() ? normalizeUser(fullUser) : normalizeUser(user)));
     saveUsers(users);
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(normalizeUser(fullUser)));
@@ -126,7 +150,7 @@ function bindProfilePage() {
   }
 
   function updateStats() {
-    profileHeading.textContent = `${fullUser.name}'s profile`;
+    profileHeading.textContent = "Your profile";
     profileCoinCount.textContent = formatCoins(fullUser.coins);
     coinsValue.textContent = formatCoins(fullUser.coins);
     document.getElementById("testsTakenValue").textContent = String(fullUser.testsTaken);
@@ -156,9 +180,12 @@ function bindProfilePage() {
 
   function renderProfileHero() {
     applyProfileClasses();
-    namePreview.textContent = fullUser.name;
+    namePreview.textContent = `@${getProfileUsername(fullUser)}`;
     whalePreview.innerHTML = COSMETICS.renderWhale(fullUser);
     initialsPreview.textContent = getInitials(fullUser.name);
+    if (document.activeElement !== profileMessageInput) {
+      profileMessageInput.value = fullUser.profileMessage || "";
+    }
 
     if (fullUser.profileImageData) {
       picturePreview.src = fullUser.profileImageData;
@@ -243,7 +270,7 @@ function bindProfilePage() {
               <article class="friend-row">
                 <span class="friend-avatar">${friend.profileImageData ? `<img src="${friend.profileImageData}" alt="" />` : COSMETICS.renderWhale(friend)}</span>
                 <span>
-                  <strong>${COSMETICS.escapeHtml(friend.name)}</strong>
+                  <strong>@${COSMETICS.escapeHtml(getProfileUsername(friend))}</strong>
                   <small>${COSMETICS.escapeHtml(friend.email)}</small>
                 </span>
               </article>
@@ -264,7 +291,7 @@ function bindProfilePage() {
     const matches = users
       .filter((user) => user.email.toLowerCase() !== fullUser.email.toLowerCase())
       .filter((user) => !friendEmails.has(user.email.toLowerCase()))
-      .filter((user) => `${user.name} ${user.email}`.toLowerCase().includes(search))
+      .filter((user) => `${user.name} ${getProfileUsername(user)} ${user.email}`.toLowerCase().includes(search))
       .slice(0, 5);
 
     friendResults.innerHTML = matches.length
@@ -274,7 +301,7 @@ function bindProfilePage() {
               <article class="friend-row">
                 <span class="friend-avatar">${user.profileImageData ? `<img src="${user.profileImageData}" alt="" />` : COSMETICS.renderWhale(user)}</span>
                 <span>
-                  <strong>${COSMETICS.escapeHtml(user.name)}</strong>
+                  <strong>@${COSMETICS.escapeHtml(getProfileUsername(user))}</strong>
                   <small>${COSMETICS.escapeHtml(user.email)}</small>
                 </span>
                 <button class="button secondary" type="button" data-add-friend="${COSMETICS.escapeHtml(user.email)}">Add</button>
@@ -422,6 +449,18 @@ function bindProfilePage() {
       renderAll();
     });
     reader.readAsDataURL(file);
+  });
+
+  pictureFrame.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      pictureInput.click();
+    }
+  });
+
+  profileMessageInput.addEventListener("input", (event) => {
+    fullUser.profileMessage = event.target.value.slice(0, 80);
+    persistUsers();
   });
 
   friendSearch.addEventListener("input", (event) => renderFriendResults(event.target.value));

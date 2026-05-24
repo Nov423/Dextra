@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260524b" />
+    <link rel="stylesheet" href="styles.css?v=20260524c" />
   </head>
   <body>
     <div class="page-shell">
@@ -45,12 +45,12 @@
           <div class="auth-header">
             <p class="eyebrow">Sign In</p>
             <h3>Welcome back</h3>
-            <p>Use the email and password you registered with.</p>
+            <p>Use your email or username and password.</p>
           </div>
           <form class="auth-form" id="signInForm" novalidate>
             <div class="field-row">
-              <label for="signInEmail">Email</label>
-              <input id="signInEmail" type="email" placeholder="you@school.edu" required />
+              <label for="signInEmail">Email or Username</label>
+              <input id="signInEmail" type="text" placeholder="you@school.edu or username" autocomplete="username" required />
             </div>
             <div class="field-row">
               <label for="signInPassword">Password</label>
@@ -76,6 +76,6 @@
 
     <script src="reset-seed.js?v=20260415seed"></script>
     <script src="feedback-modal.js?v=20260416h"></script>
-    <script src="auth.js?v=20260524a"></script>
+    <script src="auth.js?v=20260524c"></script>
   </body>
 </html>

@@ -47,6 +47,7 @@ function setCurrentUser(user) {
     JSON.stringify({
       name: user.name,
       email: user.email,
+      username: user.username,
       plan: user.plan,
       role: user.role,
     })
@@ -82,8 +83,36 @@ function generateCode(existingClubs) {
   return code;
 }
 
-function userExists(email) {
-  return getUsers().some((user) => user.email.toLowerCase() === email.toLowerCase());
+function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function fallbackUsername(user) {
+  const source = String(user?.email || user?.name || "dextra-user").split("@")[0];
+  const cleaned = source.toLowerCase().replace(/[^a-z0-9._-]+/g, "").slice(0, 20);
+  return cleaned || "dextra-user";
+}
+
+function userExists(email, users = getUsers()) {
+  return users.some((user) => user.email.toLowerCase() === email.toLowerCase());
+}
+
+function usernameExists(username, users = getUsers()) {
+  const normalized = normalizeUsername(username);
+  return users.some((user) => normalizeUsername(user.username || fallbackUsername(user)) === normalized);
+}
+
+function isValidUsername(username) {
+  return /^[a-z0-9._-]{3,20}$/.test(normalizeUsername(username));
+}
+
+function findUserByLogin(login, users = getUsers()) {
+  const normalizedLogin = normalizeUsername(login);
+  return users.find((user) => {
+    const email = String(user.email || "").toLowerCase();
+    const username = normalizeUsername(user.username || fallbackUsername(user));
+    return email === normalizedLogin || username === normalizedLogin;
+  });
 }
 
 function isValidEmail(email) {
@@ -147,6 +176,7 @@ function createUserRecord(base) {
     equippedWhaleAccessory: "",
     equippedProfileBorder: "",
     profileImageData: "",
+    profileMessage: "Ready for DECA practice.",
     friends: [],
     ownedClothing: [],
     equippedClothing: "",
@@ -170,11 +200,13 @@ function bindSignUpPage() {
   const clubNameInput = document.getElementById("clubName");
   const priceSummary = document.getElementById("priceSummary");
   const signUpEmailInput = document.getElementById("signUpEmail");
+  const signUpUsernameInput = document.getElementById("signUpUsername");
   const signUpPasswordInput = document.getElementById("signUpPassword");
   const signUpConfirmPasswordInput = document.getElementById("signUpConfirmPassword");
 
   bindValidationReset([
     signUpEmailInput,
+    signUpUsernameInput,
     signUpPasswordInput,
     signUpConfirmPasswordInput,
   ]);
@@ -223,18 +255,23 @@ function bindSignUpPage() {
 
     const name = document.getElementById("signUpName").value.trim();
     const email = signUpEmailInput.value.trim();
+    const username = normalizeUsername(signUpUsernameInput.value);
     const clubName = clubNameInput.value.trim();
     const password = signUpPasswordInput.value;
     const confirmPassword = signUpConfirmPasswordInput.value;
     const accountCount = Number(accountCountInput.value);
 
     clearInvalid(signUpEmailInput);
+    clearInvalid(signUpUsernameInput);
     clearInvalid(signUpPasswordInput);
     clearInvalid(signUpConfirmPasswordInput);
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !username || !password || !confirmPassword) {
       if (!email) {
         markInvalid(signUpEmailInput);
+      }
+      if (!username) {
+        markInvalid(signUpUsernameInput);
       }
       if (!password) {
         markInvalid(signUpPasswordInput);
@@ -243,6 +280,12 @@ function bindSignUpPage() {
         markInvalid(signUpConfirmPasswordInput);
       }
       signUpStatus.textContent = "Fill out every required field.";
+      return;
+    }
+
+    if (!isValidUsername(username)) {
+      markInvalid(signUpUsernameInput);
+      signUpStatus.textContent = "Username must be 3 to 20 letters, numbers, dots, dashes, or underscores.";
       return;
     }
 
@@ -265,12 +308,18 @@ function bindSignUpPage() {
       return;
     }
 
-    if (userExists(email)) {
+    const users = getUsers();
+
+    if (userExists(email, users)) {
       signUpStatus.textContent = "An account with that email already exists.";
       return;
     }
 
-    const users = getUsers();
+    if (usernameExists(username, users)) {
+      markInvalid(signUpUsernameInput);
+      signUpStatus.textContent = "That username is already taken.";
+      return;
+    }
 
     if (selectedPlan === "small") {
       if (!clubName) {
@@ -285,7 +334,7 @@ function bindSignUpPage() {
 
       const clubs = getClubs();
       const code = generateCode(clubs);
-      const user = createUserRecord({ name, email, password, plan: "small", role: "advisor", code });
+      const user = createUserRecord({ name, email, username, password, plan: "small", role: "advisor", code });
       clubs.push({
         code,
         name: clubName,
@@ -323,7 +372,7 @@ function bindSignUpPage() {
 
       const clubs = getClubs();
       const code = generateCode(clubs);
-      const user = createUserRecord({ name, email, password, plan: "big", role: "advisor", code });
+      const user = createUserRecord({ name, email, username, password, plan: "big", role: "advisor", code });
       clubs.push({
         code,
         name: clubName,
@@ -351,6 +400,7 @@ function bindSignUpPage() {
     const user = createUserRecord({
       name,
       email,
+      username,
       password,
       plan: selectedPlan,
       role: "member",
@@ -373,10 +423,11 @@ function bindJoinClassPage() {
 
   const joinClassStatus = document.getElementById("joinClassStatus");
   const joinEmailInput = document.getElementById("joinEmail");
+  const joinUsernameInput = document.getElementById("joinUsername");
   const joinPasswordInput = document.getElementById("joinPassword");
   const joinConfirmPasswordInput = document.getElementById("joinConfirmPassword");
 
-  bindValidationReset([joinEmailInput, joinPasswordInput, joinConfirmPasswordInput]);
+  bindValidationReset([joinEmailInput, joinUsernameInput, joinPasswordInput, joinConfirmPasswordInput]);
 
   joinClassForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -384,10 +435,12 @@ function bindJoinClassPage() {
     const code = document.getElementById("joinCode").value;
     const name = document.getElementById("joinName").value.trim();
     const email = joinEmailInput.value.trim();
+    const username = normalizeUsername(joinUsernameInput.value);
     const password = joinPasswordInput.value;
     const confirmPassword = joinConfirmPasswordInput.value;
 
     clearInvalid(joinEmailInput);
+    clearInvalid(joinUsernameInput);
     clearInvalid(joinPasswordInput);
     clearInvalid(joinConfirmPasswordInput);
 
@@ -396,9 +449,12 @@ function bindJoinClassPage() {
       return;
     }
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !username || !password || !confirmPassword) {
       if (!email) {
         markInvalid(joinEmailInput);
+      }
+      if (!username) {
+        markInvalid(joinUsernameInput);
       }
       if (!password) {
         markInvalid(joinPasswordInput);
@@ -407,6 +463,12 @@ function bindJoinClassPage() {
         markInvalid(joinConfirmPasswordInput);
       }
       joinClassStatus.textContent = "Fill out every required field.";
+      return;
+    }
+
+    if (!isValidUsername(username)) {
+      markInvalid(joinUsernameInput);
+      joinClassStatus.textContent = "Username must be 3 to 20 letters, numbers, dots, dashes, or underscores.";
       return;
     }
 
@@ -429,8 +491,16 @@ function bindJoinClassPage() {
       return;
     }
 
-    if (userExists(email)) {
+    const users = getUsers();
+
+    if (userExists(email, users)) {
       joinClassStatus.textContent = "An account with that email already exists.";
+      return;
+    }
+
+    if (usernameExists(username, users)) {
+      markInvalid(joinUsernameInput);
+      joinClassStatus.textContent = "That username is already taken.";
       return;
     }
 
@@ -447,10 +517,10 @@ function bindJoinClassPage() {
       return;
     }
 
-    const users = getUsers();
     const user = createUserRecord({
       name,
       email,
+      username,
       password,
       plan: club.plan,
       role: "student",
@@ -474,22 +544,22 @@ function bindSignInPage() {
   }
 
   const signInStatus = document.getElementById("signInStatus");
-  const signInEmailInput = document.getElementById("signInEmail");
+  const signInLoginInput = document.getElementById("signInEmail");
   const signInPasswordInput = document.getElementById("signInPassword");
 
-  bindValidationReset([signInEmailInput, signInPasswordInput]);
+  bindValidationReset([signInLoginInput, signInPasswordInput]);
 
   signInForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    const email = signInEmailInput.value.trim();
+    const login = signInLoginInput.value.trim();
     const password = signInPasswordInput.value;
 
-    clearInvalid(signInEmailInput);
+    clearInvalid(signInLoginInput);
     clearInvalid(signInPasswordInput);
 
-    if (!email || !password) {
-      if (!email) {
-        markInvalid(signInEmailInput);
+    if (!login || !password) {
+      if (!login) {
+        markInvalid(signInLoginInput);
       }
       if (!password) {
         markInvalid(signInPasswordInput);
@@ -498,20 +568,12 @@ function bindSignInPage() {
       return;
     }
 
-    if (!isValidEmail(email)) {
-      markInvalid(signInEmailInput);
-      signInStatus.textContent = "Enter a valid email address.";
-      return;
-    }
+    const user = findUserByLogin(login);
 
-    const user = getUsers().find(
-      (entry) => entry.email.toLowerCase() === email.toLowerCase() && entry.password === password
-    );
-
-    if (!user) {
-      markInvalid(signInEmailInput);
+    if (!user || user.password !== password) {
+      markInvalid(signInLoginInput);
       markInvalid(signInPasswordInput);
-      signInStatus.textContent = "Invalid email or password.";
+      signInStatus.textContent = "Invalid email, username, or password.";
       return;
     }
 
