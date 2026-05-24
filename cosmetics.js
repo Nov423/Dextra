@@ -294,80 +294,80 @@ function getDextraWhaleColors(user, overrides = {}) {
 function renderDextraAccessory(type) {
   if (type === "medal") {
     return `
-      <line x1="434" y1="331" x2="434" y2="383" class="whale-accessory-string" />
-      <circle cx="434" cy="403" r="22" class="whale-accessory-fill whale-medal" />
-      <path d="M434 390l5 10 11 2-8 8 2 12-10-6-10 6 2-12-8-8 11-2z" fill="#6b4a07" opacity="0.45" />
+      <line x1="459" y1="396" x2="459" y2="456" class="whale-accessory-string" />
+      <circle cx="459" cy="482" r="24" class="whale-accessory-fill whale-medal" />
+      <path d="M459 468l6 12 13 2-10 9 3 14-12-7-12 7 3-14-10-9 13-2z" fill="#6b4a07" opacity="0.45" />
     `;
   }
 
   if (type === "briefcase") {
     return `
-      <line x1="434" y1="331" x2="434" y2="379" class="whale-accessory-string" />
-      <rect x="402" y="383" width="64" height="44" rx="9" class="whale-accessory-fill whale-briefcase" />
-      <path d="M420 383v-9h28v9" fill="none" stroke="#061528" stroke-width="6" stroke-linecap="round" />
-      <path d="M402 403h64" stroke="#061528" stroke-width="4" opacity="0.28" />
+      <line x1="459" y1="396" x2="459" y2="452" class="whale-accessory-string" />
+      <rect x="424" y="456" width="70" height="50" rx="10" class="whale-accessory-fill whale-briefcase" />
+      <path d="M440 456v-10h38v10" fill="none" stroke="#061528" stroke-width="6" stroke-linecap="round" />
+      <path d="M424 478h70" stroke="#061528" stroke-width="4" opacity="0.28" />
     `;
   }
 
   if (type === "star") {
     return `
-      <line x1="434" y1="331" x2="434" y2="382" class="whale-accessory-string" />
-      <path d="M434 376l9 20 22 2-16 15 5 22-20-12-20 12 5-22-16-15 22-2z" class="whale-accessory-fill whale-star" />
+      <line x1="459" y1="396" x2="459" y2="455" class="whale-accessory-string" />
+      <path d="M459 448l10 23 25 3-18 17 5 25-22-13-22 13 5-25-18-17 25-3z" class="whale-accessory-fill whale-star" />
     `;
   }
 
   if (type === "crown") {
     return `
-      <line x1="434" y1="331" x2="434" y2="381" class="whale-accessory-string" />
-      <path d="M403 408l7-34 16 20 9-25 11 25 16-20 7 34z" class="whale-accessory-fill whale-crown" />
-      <path d="M407 410h55" stroke="#061528" stroke-width="5" stroke-linecap="round" opacity="0.26" />
+      <line x1="459" y1="396" x2="459" y2="454" class="whale-accessory-string" />
+      <path d="M425 486l8-39 17 23 10-29 12 29 17-23 8 39z" class="whale-accessory-fill whale-crown" />
+      <path d="M430 489h60" stroke="#061528" stroke-width="5" stroke-linecap="round" opacity="0.26" />
     `;
   }
 
   if (type === "trophy") {
     return `
-      <line x1="434" y1="331" x2="434" y2="378" class="whale-accessory-string" />
-      <path d="M418 383h32v20c0 12-7 21-16 21s-16-9-16-21z" class="whale-accessory-fill whale-trophy" />
-      <path d="M418 389h-12c0 15 7 23 17 25M450 389h12c0 15-7 23-17 25" fill="none" stroke="#061528" stroke-width="5" stroke-linecap="round" opacity="0.35" />
-      <path d="M434 424v15M419 439h30" stroke="#061528" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+      <line x1="459" y1="396" x2="459" y2="451" class="whale-accessory-string" />
+      <path d="M442 456h35v23c0 14-8 24-18 24s-17-10-17-24z" class="whale-accessory-fill whale-trophy" />
+      <path d="M442 463h-13c0 17 8 26 18 28M477 463h13c0 17-8 26-18 28" fill="none" stroke="#061528" stroke-width="5" stroke-linecap="round" opacity="0.35" />
+      <path d="M459 503v17M443 520h33" stroke="#061528" stroke-width="6" stroke-linecap="round" opacity="0.35" />
     `;
   }
 
   if (type === "lightning") {
     return `
-      <line x1="434" y1="331" x2="434" y2="381" class="whale-accessory-string" />
-      <path d="M442 372l-31 42h23l-8 30 34-44h-23z" class="whale-accessory-fill whale-lightning" />
+      <line x1="459" y1="396" x2="459" y2="454" class="whale-accessory-string" />
+      <path d="M468 444l-34 48h26l-9 35 38-51h-26z" class="whale-accessory-fill whale-lightning" />
     `;
   }
 
   if (type === "gem") {
     return `
-      <line x1="434" y1="331" x2="434" y2="381" class="whale-accessory-string" />
-      <path d="M434 374l31 18-31 45-31-45z" class="whale-accessory-fill whale-gem" />
-      <path d="M403 392h62M434 374l-12 18 12 45 12-45z" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.42" />
+      <line x1="459" y1="396" x2="459" y2="454" class="whale-accessory-string" />
+      <path d="M459 445l34 21-34 52-34-52z" class="whale-accessory-fill whale-gem" />
+      <path d="M425 466h68M459 445l-13 21 13 52 13-52z" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.42" />
     `;
   }
 
   if (type === "book") {
     return `
-      <line x1="434" y1="331" x2="434" y2="380" class="whale-accessory-string" />
-      <path d="M399 387c14-7 25-6 35 2 10-8 21-9 35-2v45c-14-6-25-5-35 2-10-7-21-8-35-2z" class="whale-accessory-fill whale-book" />
-      <path d="M434 389v45M410 402c8-2 14-1 19 3M439 405c6-4 12-5 19-3" fill="none" stroke="#061528" stroke-width="4" stroke-linecap="round" opacity="0.3" />
+      <line x1="459" y1="396" x2="459" y2="453" class="whale-accessory-string" />
+      <path d="M421 461c15-8 28-7 38 2 11-9 24-10 39-2v51c-15-7-28-6-39 2-10-8-23-9-38-2z" class="whale-accessory-fill whale-book" />
+      <path d="M459 463v51M433 477c9-3 16-2 21 3M464 480c7-4 14-6 22-3" fill="none" stroke="#061528" stroke-width="4" stroke-linecap="round" opacity="0.3" />
     `;
   }
 
   if (type === "heart") {
     return `
-      <line x1="434" y1="331" x2="434" y2="380" class="whale-accessory-string" />
-      <path d="M434 433s-32-18-32-40c0-11 8-19 18-19 7 0 12 4 14 9 3-5 8-9 15-9 10 0 18 8 18 19 0 22-33 40-33 40z" class="whale-accessory-fill whale-heart" />
+      <line x1="459" y1="396" x2="459" y2="453" class="whale-accessory-string" />
+      <path d="M459 516s-35-21-35-46c0-13 9-22 20-22 8 0 13 5 15 10 3-5 9-10 17-10 11 0 20 9 20 22 0 25-37 46-37 46z" class="whale-accessory-fill whale-heart" />
     `;
   }
 
   if (type === "ribbon") {
     return `
-      <line x1="434" y1="331" x2="434" y2="378" class="whale-accessory-string" />
-      <circle cx="434" cy="396" r="19" class="whale-accessory-fill whale-ribbon" />
-      <path d="M421 410l-11 27 18-7 6 16 9-34M447 410l11 27-18-7-6 16-9-34" class="whale-accessory-fill whale-ribbon-tail" />
+      <line x1="459" y1="396" x2="459" y2="451" class="whale-accessory-string" />
+      <circle cx="459" cy="472" r="21" class="whale-accessory-fill whale-ribbon" />
+      <path d="M445 488l-13 31 20-8 7 18 10-39M473 488l13 31-20-8-7 18-10-39" class="whale-accessory-fill whale-ribbon-tail" />
     `;
   }
 
@@ -378,31 +378,30 @@ function renderDextraWhale(user, overrides = {}) {
   const whale = getDextraWhaleColors(user, overrides);
   const id = `dextra-whale-${++dextraWhaleRenderCount}`;
   return `
-    <svg class="whale-avatar" viewBox="0 0 658 456" role="img" aria-label="Dextra whale mascot">
+    <svg class="whale-avatar" viewBox="0 0 696 546" role="img" aria-label="Dextra whale mascot">
       <defs>
-        <linearGradient id="${id}-body" x1="80" y1="110" x2="560" y2="390" gradientUnits="userSpaceOnUse">
+        <linearGradient id="${id}-body" x1="80" y1="150" x2="570" y2="470" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="${dextraEscapeHtml(dextraShadeHex(whale.primary, 0.12))}" />
           <stop offset="0.62" stop-color="${dextraEscapeHtml(whale.primary)}" />
           <stop offset="1" stop-color="${dextraEscapeHtml(whale.primaryShadow)}" />
         </linearGradient>
-        <linearGradient id="${id}-belly" x1="76" y1="316" x2="360" y2="410" gradientUnits="userSpaceOnUse">
+        <linearGradient id="${id}-belly" x1="72" y1="360" x2="370" y2="500" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="${dextraEscapeHtml(dextraShadeHex(whale.secondary, 0.08))}" />
           <stop offset="1" stop-color="${dextraEscapeHtml(whale.secondary)}" />
         </linearGradient>
       </defs>
-      <path d="M505 214c24-58 77-104 135-109-2 60-28 105-78 134 42 30 65 78 66 134-59-8-99-41-122-95z" fill="url(#${id}-body)" />
-      <path d="M549 235c20-40 51-71 91-91-5 43-26 77-63 101 28 25 43 62 44 103-38-9-66-35-82-76z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.34" />
-      <path d="M33 266c0-112 79-174 207-174 95 0 170 30 231 78 48 37 83 52 108 53 18 0 32-8 42-24 6 75-21 133-80 174-54 37-136 51-239 39-74-9-139-28-205-28-43 0-64-51-64-118z" fill="url(#${id}-body)" />
-      <path d="M80 330c35 33 84 52 146 58 44 5 82 1 116-10-16 39-54 61-116 60-75-1-132-26-171-75-10-13 10-44 25-33z" fill="url(#${id}-belly)" />
-      <path d="M355 365c38 4 78-2 119-18-16 36-44 61-82 74-15-19-27-38-37-56z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.42" />
-      <path d="M390 386c36 14 68 15 95 3 1 34-14 55-47 63-23-15-39-37-48-66z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.52" />
-      <path d="M151 94c-7-38 8-68 45-88 34 16 51 46 51 91-33-11-65-12-96-3z" fill="${dextraEscapeHtml(whale.primary)}" />
-      <path d="M276 96c-1-39 18-68 56-84 31 20 43 52 35 94-30-14-61-17-91-10z" fill="${dextraEscapeHtml(whale.primary)}" />
-      <path d="M72 152c42-22 101-29 177-19" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.78" />
-      <path d="M105 137c37-15 80-20 129-13" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.78" />
-      <circle cx="281" cy="284" r="8" fill="#33271f" />
-      <path d="M39 322c65 10 136 14 213 14 44 0 66-16 70-54" fill="none" stroke="#33271f" stroke-width="8" stroke-linecap="round" />
-      <path d="M95 337c14 26 28 47 43 64M141 340c14 31 31 56 51 74M192 341c11 32 25 58 43 78M244 340c7 27 17 52 31 74" fill="none" stroke="${dextraEscapeHtml(dextraShadeHex(whale.primary, -0.12))}" stroke-width="4" stroke-linecap="round" opacity="0.52" />
+      <path d="M506 288c34-71 91-121 163-130-1 70-28 121-79 154 51 40 78 96 82 168-60-13-99-47-118-101-20 57-54 105-100 142-34 27-69 28-89 3-13-17-14-39-4-65 56-17 104-73 145-171z" fill="url(#${id}-body)" />
+      <path d="M592 311c35-28 56-66 63-113 5 0 10-1 14-2-1 53-26 93-75 120 45 39 70 88 75 148-37-14-65-40-83-78-10-23-9-48 6-75z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.4" />
+      <path d="M36 318c0-87 54-143 151-157 126-19 239 17 339 109 31 29 58 35 81 17-5 97-47 158-126 185-68 23-161 17-279-17-64-18-109-38-136-60-20-16-30-42-30-77z" fill="url(#${id}-body)" />
+      <path d="M60 388c66 19 144 24 233 14 29-3 60-9 92-18-16 54-57 83-123 87-87 5-158-22-213-81 3-3 7-3 11-2z" fill="url(#${id}-belly)" />
+      <path d="M358 411c37 5 77-3 120-23-13 39-42 68-87 88-18-16-29-37-33-65z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.46" />
+      <path d="M238 182c-13-37-42-40-58-66 27-18 62 6 68 61z" fill="${dextraEscapeHtml(whale.primary)}" />
+      <path d="M269 188c4-39 31-65 61-54 17 28-16 56-58 72z" fill="${dextraEscapeHtml(whale.primary)}" />
+      <path d="M77 246c38-28 100-42 186-36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.78" />
+      <path d="M104 229c36-19 82-28 138-27" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.78" />
+      <circle cx="249" cy="397" r="7" fill="#33271f" />
+      <path d="M66 419c59 6 128 9 207 9 29 0 47-14 51-42" fill="none" stroke="#33271f" stroke-width="8" stroke-linecap="round" />
+      <path d="M96 416c13 32 30 56 52 72M143 420c15 31 34 56 57 74M192 422c16 31 37 57 62 78M244 422c13 28 30 52 50 72" fill="none" stroke="${dextraEscapeHtml(dextraShadeHex(whale.primary, -0.12))}" stroke-width="4" stroke-linecap="round" opacity="0.48" />
       ${renderDextraAccessory(whale.accessory)}
     </svg>
   `;
