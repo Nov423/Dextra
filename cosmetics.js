@@ -380,28 +380,32 @@ function renderDextraWhale(user, overrides = {}) {
   return `
     <svg class="whale-avatar" viewBox="0 0 696 546" role="img" aria-label="Dextra whale mascot">
       <defs>
-        <linearGradient id="${id}-body" x1="80" y1="150" x2="570" y2="470" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="${dextraEscapeHtml(dextraShadeHex(whale.primary, 0.12))}" />
-          <stop offset="0.62" stop-color="${dextraEscapeHtml(whale.primary)}" />
-          <stop offset="1" stop-color="${dextraEscapeHtml(whale.primaryShadow)}" />
-        </linearGradient>
-        <linearGradient id="${id}-belly" x1="72" y1="360" x2="370" y2="500" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="${dextraEscapeHtml(dextraShadeHex(whale.secondary, 0.08))}" />
-          <stop offset="1" stop-color="${dextraEscapeHtml(whale.secondary)}" />
-        </linearGradient>
+        <filter id="${id}-primary" color-interpolation-filters="sRGB">
+          <feFlood flood-color="${dextraEscapeHtml(whale.primary)}" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-shadow" color-interpolation-filters="sRGB">
+          <feFlood flood-color="${dextraEscapeHtml(whale.primaryShadow)}" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-secondary" color-interpolation-filters="sRGB">
+          <feFlood flood-color="${dextraEscapeHtml(whale.secondary)}" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-detail" color-interpolation-filters="sRGB">
+          <feFlood flood-color="#33271f" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
+        <filter id="${id}-highlight" color-interpolation-filters="sRGB">
+          <feFlood flood-color="#ffffff" flood-opacity="0.84" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" />
+        </filter>
       </defs>
-      <path d="M506 288c34-71 91-121 163-130-1 70-28 121-79 154 51 40 78 96 82 168-60-13-99-47-118-101-20 57-54 105-100 142-34 27-69 28-89 3-13-17-14-39-4-65 56-17 104-73 145-171z" fill="url(#${id}-body)" />
-      <path d="M592 311c35-28 56-66 63-113 5 0 10-1 14-2-1 53-26 93-75 120 45 39 70 88 75 148-37-14-65-40-83-78-10-23-9-48 6-75z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.4" />
-      <path d="M36 318c0-87 54-143 151-157 126-19 239 17 339 109 31 29 58 35 81 17-5 97-47 158-126 185-68 23-161 17-279-17-64-18-109-38-136-60-20-16-30-42-30-77z" fill="url(#${id}-body)" />
-      <path d="M60 388c66 19 144 24 233 14 29-3 60-9 92-18-16 54-57 83-123 87-87 5-158-22-213-81 3-3 7-3 11-2z" fill="url(#${id}-belly)" />
-      <path d="M358 411c37 5 77-3 120-23-13 39-42 68-87 88-18-16-29-37-33-65z" fill="${dextraEscapeHtml(whale.primaryShadow)}" opacity="0.46" />
-      <path d="M238 182c-13-37-42-40-58-66 27-18 62 6 68 61z" fill="${dextraEscapeHtml(whale.primary)}" />
-      <path d="M269 188c4-39 31-65 61-54 17 28-16 56-58 72z" fill="${dextraEscapeHtml(whale.primary)}" />
-      <path d="M77 246c38-28 100-42 186-36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.78" />
-      <path d="M104 229c36-19 82-28 138-27" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.78" />
-      <circle cx="249" cy="397" r="7" fill="#33271f" />
-      <path d="M66 419c59 6 128 9 207 9 29 0 47-14 51-42" fill="none" stroke="#33271f" stroke-width="8" stroke-linecap="round" />
-      <path d="M96 416c13 32 30 56 52 72M143 420c15 31 34 56 57 74M192 422c16 31 37 57 62 78M244 422c13 28 30 52 50 72" fill="none" stroke="${dextraEscapeHtml(dextraShadeHex(whale.primary, -0.12))}" stroke-width="4" stroke-linecap="round" opacity="0.48" />
+      <image href="assets/whale-primary-mask.png" width="696" height="546" filter="url(#${id}-primary)" />
+      <image href="assets/whale-shadow-mask.png" width="696" height="546" filter="url(#${id}-shadow)" />
+      <image href="assets/whale-secondary-mask.png" width="696" height="546" filter="url(#${id}-secondary)" />
+      <image href="assets/whale-highlight-mask.png" width="696" height="546" filter="url(#${id}-highlight)" />
+      <image href="assets/whale-detail-mask.png" width="696" height="546" filter="url(#${id}-detail)" />
       ${renderDextraAccessory(whale.accessory)}
     </svg>
   `;
