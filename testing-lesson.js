@@ -4,6 +4,41 @@ const CHECKPOINT_INTERVAL = 5;
 const MOTIVATION_CHECKPOINTS = new Set([5, 15]);
 const SHOP_CHECKPOINT = 10;
 
+const MOTIVATION_IMAGES = [
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/002/050/856/b27.jpg",
+    alt: "You got this motivational meme",
+  },
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/002/261/943/fa6.jpg",
+    alt: "You got this supportive meme",
+  },
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/001/944/925/044.jpg",
+    alt: "Breathe, you got this motivational meme",
+  },
+  {
+    url: "https://i.imgflip.com/7zg3x2.jpg",
+    alt: "Success kid you got this good luck meme",
+  },
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/001/537/170/71e.jpg",
+    alt: "You can do it motivational meme",
+  },
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/001/921/898/c99.png",
+    alt: "Believe in yourself motivational meme",
+  },
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/002/193/854/3a1.jpg",
+    alt: "Keep going motivational meme",
+  },
+  {
+    url: "https://i.kym-cdn.com/photos/images/newsfeed/002/861/083/cb8.png",
+    alt: "I believe you can do it motivational meme",
+  },
+];
+
 const LESSON_SHOP_ITEMS = [
   {
     id: "clothing-hoodie",
@@ -71,6 +106,10 @@ function updateLessonCoinDisplay(user) {
 
 function getCoinReward() {
   return Math.floor(Math.random() * 6) + 5;
+}
+
+function getMotivationImage() {
+  return MOTIVATION_IMAGES[Math.floor(Math.random() * MOTIVATION_IMAGES.length)];
 }
 
 function playCorrectSound() {
@@ -462,6 +501,7 @@ function bindLesson() {
         title: "You got this!",
         message: "Keep going and clean up anything you miss at the end.",
         rewardLine,
+        image: getMotivationImage(),
       });
       return;
     }
@@ -572,9 +612,14 @@ function bindLesson() {
         ${
           isMotivation
             ? `
-              <div class="motivation-image" aria-hidden="true">
-                <span class="motivation-face"></span>
-                <strong>You got this!</strong>
+              <div class="motivation-image">
+                <img
+                  class="motivation-photo"
+                  src="${escapeHtml(screen.image.url)}"
+                  alt="${escapeHtml(screen.image.alt)}"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                />
               </div>
             `
             : ""
