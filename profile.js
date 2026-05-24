@@ -176,13 +176,35 @@ function bindProfilePage() {
     bannerPreview.className = "profile-banner-preview profile-hero-card";
     pictureFrame.className = "profile-picture-frame";
     namePreview.className = "";
+    bannerPreview.style.removeProperty("--profile-banner-start");
+    bannerPreview.style.removeProperty("--profile-banner-end");
+    bannerPreview.style.removeProperty("--profile-banner-border");
+    pictureFrame.style.removeProperty("--profile-border-color");
+    namePreview.style.removeProperty("--profile-name-effect-color");
+    namePreview.style.removeProperty("--profile-name-effect-shadow");
 
     if (fullUser.equippedBanner && fullUser.equippedBanner !== "banner-default") {
       bannerPreview.classList.add(fullUser.equippedBanner);
+      const bannerItem = COSMETICS.getItem(fullUser.equippedBanner);
+      if (bannerItem?.colors?.length) {
+        bannerPreview.style.setProperty("--profile-banner-start", bannerItem.colors[0]);
+        bannerPreview.style.setProperty("--profile-banner-end", bannerItem.colors[1] || bannerItem.colors[0]);
+        bannerPreview.style.setProperty("--profile-banner-border", bannerItem.colors[0]);
+      }
     }
 
     if (fullUser.equippedProfileBorder && fullUser.equippedProfileBorder !== "border-default") {
       pictureFrame.classList.add(fullUser.equippedProfileBorder);
+      const borderItem = COSMETICS.getItem(fullUser.equippedProfileBorder);
+      if (borderItem?.color) {
+        pictureFrame.style.setProperty("--profile-border-color", borderItem.color);
+      }
+    }
+
+    const nameItem = COSMETICS.getItem(fullUser.equippedNameEffect);
+    if (nameItem?.color) {
+      namePreview.style.setProperty("--profile-name-effect-color", nameItem.color);
+      namePreview.style.setProperty("--profile-name-effect-shadow", `0 0 18px ${nameItem.color}cc, 0 0 36px ${nameItem.color}66`);
     }
 
     if (fullUser.equippedNameEffect === "name-glow") {
@@ -438,19 +460,6 @@ function bindProfilePage() {
     renderAll();
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (!isAdminUser(fullUser) || shouldIgnoreShortcut(event)) {
-      return;
-    }
-
-    if (event.key.toLowerCase() === "g") {
-      event.preventDefault();
-      fullUser.coins = Number(fullUser.coins || 0) + 1000;
-      fullUser.coinsEarned = Number(fullUser.coinsEarned || 0) + 1000;
-      renderAll();
-    }
-  });
-
   pictureInput.addEventListener("change", () => {
     const file = pictureInput.files?.[0];
     if (!file) {
@@ -496,6 +505,18 @@ function bindProfilePage() {
     persistUsers();
     renderFriends();
     renderFriendResults(friendSearch.value);
+  });
+
+  window.addEventListener("dextra:user-updated", (event) => {
+    const updatedUser = normalizeUser(event.detail?.user || {});
+    const sameEmail = updatedUser.email && updatedUser.email.toLowerCase() === fullUser.email?.toLowerCase();
+    if (!sameEmail) {
+      return;
+    }
+
+    users = getStoredJson(USERS_KEY).map(normalizeUser);
+    Object.assign(fullUser, updatedUser);
+    renderAll();
   });
 
   renderClassPanels();

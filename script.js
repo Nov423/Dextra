@@ -4,6 +4,14 @@ const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 
 const COSMETICS = window.DEXTRA_COSMETICS;
 const SHOP_ITEMS = COSMETICS?.SHOP_ITEMS || [];
+const SHOP_GROUPS = [
+  { type: "whalePrimary", title: "Primary Color" },
+  { type: "whaleSecondary", title: "Secondary Color" },
+  { type: "whaleAccessory", title: "Accessories" },
+  { type: "banner", title: "Profile Banner" },
+  { type: "profileBorder", title: "Profile Border" },
+  { type: "nameEffect", title: "Name Effect" },
+];
 
 const LEADERBOARD_FILLERS = [
   { name: "KoroKage", bestStreak: 48, coinsEarned: 520 },
@@ -197,6 +205,7 @@ function bindHomeSession() {
     signOutButton.classList.add("hidden");
     signInButton.classList.remove("hidden");
     signUpButton.classList.remove("hidden");
+    publicNav.classList.remove("app-nav");
     publicNav.innerHTML = `
       <a href="#hero">Home</a>
       <a href="#team">Meet the Team</a>
@@ -214,6 +223,7 @@ function bindHomeSession() {
   signOutButton.classList.remove("hidden");
   signInButton.classList.add("hidden");
   signUpButton.classList.add("hidden");
+  publicNav.classList.add("app-nav");
   let fullUser = getUsers()
     .map(normalizeUser)
     .find((entry) => entry.email?.toLowerCase() === user.email?.toLowerCase()) || normalizeUser(user);
@@ -358,39 +368,195 @@ function bindHomeSession() {
     `;
   }
 
+  function getBannerStyle(item) {
+    if (!item?.colors?.length) {
+      return "";
+    }
+
+    const start = COSMETICS.escapeHtml(item.colors[0]);
+    const end = COSMETICS.escapeHtml(item.colors[1] || item.colors[0]);
+    return `--profile-banner-start: ${start}; --profile-banner-end: ${end}; --profile-banner-border: ${start};`;
+  }
+
+  function getBorderStyle(item) {
+    if (!item?.color) {
+      return "";
+    }
+
+    return `--profile-border-color: ${COSMETICS.escapeHtml(item.color)};`;
+  }
+
+  function getNameStyle(item) {
+    if (!item?.color) {
+      return "";
+    }
+
+    const color = COSMETICS.escapeHtml(item.color);
+    return `--profile-name-effect-color: ${color}; --profile-name-effect-shadow: 0 0 18px ${color}99, 0 0 36px ${color}4d;`;
+  }
+
+  function createPreviewUser(item) {
+    const previewUser = normalizeCosmetics(JSON.parse(JSON.stringify(fullUser)));
+    COSMETICS?.equipItem(previewUser, item);
+    return previewUser;
+  }
+
+  function getDisplayUsername(user) {
+    if (isAdminUser(user)) {
+      return "Admin";
+    }
+
+    return user.username || String(user.email || user.name || "dextra-user").split("@")[0];
+  }
+
+  function renderFullBannerPreview(item) {
+    const previewUser = createPreviewUser(item);
+    const bannerItem = COSMETICS?.getItem(previewUser.equippedBanner);
+    const borderItem = COSMETICS?.getItem(previewUser.equippedProfileBorder);
+    const nameItem = COSMETICS?.getItem(previewUser.equippedNameEffect);
+    const initials = getInitials(previewUser.name);
+    const picture = previewUser.profileImageData
+      ? `<img src="${previewUser.profileImageData}" alt="" />`
+      : `<span>${escapeHtml(initials)}</span>`;
+
+    return `
+      <div class="shop-banner-preview" style="${getBannerStyle(bannerItem)}">
+        <div class="shop-banner-picture" style="${getBorderStyle(borderItem)}">${picture}</div>
+        <div class="shop-banner-whale">${COSMETICS?.renderWhale(previewUser) || ""}</div>
+        <div class="shop-banner-copy">
+          <strong style="${getNameStyle(nameItem)}">@${escapeHtml(getDisplayUsername(previewUser))}</strong>
+          <span>${escapeHtml(previewUser.profileMessage || "Ready for DECA practice.")}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function ensureShopPreviewModal() {
+    let modal = document.getElementById("shopPreviewModal");
+    if (modal) {
+      return modal;
+    }
+
+    modal = document.createElement("div");
+    modal.id = "shopPreviewModal";
+    modal.className = "shop-preview-overlay hidden";
+    modal.innerHTML = `
+      <article class="shop-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="shopPreviewTitle">
+        <button class="shop-preview-close" type="button" data-close-shop-preview aria-label="Close preview">x</button>
+        <p class="eyebrow" id="shopPreviewCategory">Preview</p>
+        <h3 id="shopPreviewTitle">Preview item</h3>
+        <p id="shopPreviewCopy"></p>
+        <div id="shopPreviewStage"></div>
+        <div class="shop-preview-actions">
+          <button class="button secondary" type="button" data-close-shop-preview>Cancel</button>
+          <button class="button primary" type="button" id="confirmShopBuyButton">Confirm Buy</button>
+        </div>
+      </article>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal || event.target.closest("[data-close-shop-preview]")) {
+        closeShopPreview();
+      }
+    });
+    document.getElementById("confirmShopBuyButton").addEventListener("click", () => {
+      const item = SHOP_ITEM_MAP.get(modal.dataset.itemId);
+      if (item) {
+        buyAndEquipItem(item);
+      }
+      closeShopPreview();
+    });
+    return modal;
+  }
+
+  function openShopPreview(item) {
+    const modal = ensureShopPreviewModal();
+    modal.dataset.itemId = item.id;
+    modal.querySelector("#shopPreviewCategory").textContent = item.categoryLabel || item.type;
+    modal.querySelector("#shopPreviewTitle").textContent = item.title;
+    modal.querySelector("#shopPreviewCopy").textContent = `${formatCoins(item.cost)} coins. Preview shows it equipped on your profile banner.`;
+    modal.querySelector("#shopPreviewStage").innerHTML = renderFullBannerPreview(item);
+    modal.classList.remove("hidden");
+  }
+
+  function closeShopPreview() {
+    const modal = document.getElementById("shopPreviewModal");
+    modal?.classList.add("hidden");
+  }
+
+  function buyAndEquipItem(item) {
+    const cost = Number(item.cost || 0);
+    if (!COSMETICS?.isOwned(fullUser, item)) {
+      if (Number(fullUser.coins || 0) < cost) {
+        return;
+      }
+
+      fullUser.coins = Math.max(0, Number(fullUser.coins || 0) - cost);
+      fullUser.ownedCosmetics = [...new Set([...fullUser.ownedCosmetics, item.id])];
+    }
+
+    equipItem(item);
+    persistFullUser();
+  }
+
   function renderShop() {
     if (!shopGrid) {
       return;
     }
 
-    shopGrid.innerHTML = SHOP_ITEMS.map((item) => {
-      const isOwned = COSMETICS?.isOwned(fullUser, item) || false;
-      const isEquipped = COSMETICS?.isEquipped(fullUser, item) || false;
-      const canBuy = Number(fullUser.coins || 0) >= item.cost;
-      const buttonLabel = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - fullUser.coins)}`;
-      const action = isOwned ? "equip" : "buy";
+    const allItems = COSMETICS?.ALL_ITEMS || SHOP_ITEMS;
+    shopGrid.innerHTML = SHOP_GROUPS.map((group) => {
+      const groupItems = allItems.filter((item) => item.type === group.type);
+      const ownedCount = groupItems.filter((item) => COSMETICS?.isOwned(fullUser, item)).length;
 
       return `
-        <article class="panel shop-card${isOwned ? " owned" : ""}">
-          ${COSMETICS?.renderShopPreview(item, fullUser) || ""}
-          <div>
-            <p class="eyebrow">${escapeHtml(item.categoryLabel || item.type)}</p>
-            <h3>${escapeHtml(item.title)}</h3>
-            <p>${escapeHtml(item.description)}</p>
+        <details class="shop-group">
+          <summary>
+            <span>${escapeHtml(group.title)}</span>
+            <small>${ownedCount} of ${groupItems.length} owned</small>
+          </summary>
+          <div class="shop-group-grid">
+            ${groupItems
+              .map((item) => {
+                const isOwned = COSMETICS?.isOwned(fullUser, item) || false;
+                const isEquipped = COSMETICS?.isEquipped(fullUser, item) || false;
+                const cost = Number(item.cost || 0);
+                const canBuy = Number(fullUser.coins || 0) >= cost;
+                const buttonLabel = isEquipped
+                  ? "Equipped"
+                  : isOwned
+                    ? "Equip"
+                    : canBuy
+                      ? "Preview"
+                      : `Need ${formatCoins(cost - Number(fullUser.coins || 0))}`;
+                const action = isOwned ? "equip" : "buy";
+
+                return `
+                  <article class="shop-option-card${isOwned ? " owned" : ""}">
+                    ${COSMETICS?.renderShopPreview(item, fullUser) || ""}
+                    <div class="shop-option-copy">
+                      <p class="eyebrow">${escapeHtml(item.categoryLabel || item.type)}</p>
+                      <h3>${escapeHtml(item.title)}</h3>
+                      <p>${escapeHtml(item.description || "Default option.")}</p>
+                    </div>
+                    <div class="shop-card-footer">
+                      <span class="shop-price"><span class="coin-dot" aria-hidden="true"></span>${formatCoins(cost)}</span>
+                      <button
+                        class="button ${isEquipped ? "secondary" : "primary"}"
+                        type="button"
+                        data-shop-action="${action}"
+                        data-shop-id="${item.id}"
+                        ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
+                      >
+                        ${buttonLabel}
+                      </button>
+                    </div>
+                  </article>
+                `;
+              })
+              .join("")}
           </div>
-          <div class="shop-card-footer">
-            <span class="shop-price"><span class="coin-dot" aria-hidden="true"></span>${formatCoins(item.cost)}</span>
-            <button
-              class="button ${isEquipped ? "secondary" : "primary"}"
-              type="button"
-              data-shop-action="${action}"
-              data-shop-id="${item.id}"
-              ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
-            >
-              ${buttonLabel}
-            </button>
-          </div>
-        </article>
+        </details>
       `;
     }).join("");
   }
@@ -607,30 +773,26 @@ function bindHomeSession() {
     normalizeCosmetics(fullUser);
 
     if (button.dataset.shopAction === "buy") {
-      const cost = Number(item.cost || 0);
-      if (Number(fullUser.coins || 0) < cost) {
-        return;
-      }
-
-      fullUser.coins = Math.max(0, Number(fullUser.coins || 0) - cost);
-      fullUser.ownedCosmetics = [...new Set([...fullUser.ownedCosmetics, item.id])];
+      openShopPreview(item);
+      return;
     }
 
     equipItem(item);
     persistFullUser();
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (!isAdminUser(fullUser) || shouldIgnoreShortcut(event)) {
+  window.addEventListener("dextra:user-updated", (event) => {
+    const updatedUser = normalizeUser(event.detail?.user || {});
+    const sameEmail = updatedUser.email && updatedUser.email.toLowerCase() === fullUser.email?.toLowerCase();
+    if (!sameEmail) {
       return;
     }
 
-    if (event.key.toLowerCase() === "g") {
-      event.preventDefault();
-      fullUser.coins = Number(fullUser.coins || 0) + 1000;
-      fullUser.coinsEarned = Number(fullUser.coinsEarned || 0) + 1000;
-      persistFullUser();
-    }
+    fullUser = normalizeCosmetics(updatedUser);
+    updateCoinDisplays();
+    renderLeaderboard();
+    renderShop();
+    renderRadarChart();
   });
 
   tabButtons.forEach((button) => {

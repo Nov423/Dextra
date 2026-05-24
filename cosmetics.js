@@ -7,152 +7,159 @@ const DEXTRA_DEFAULT_COSMETICS = {
   equippedProfileBorder: "border-default",
 };
 
+const DEXTRA_BANNER_ITEMS = [
+  ["gold", "Gold Spotlight", "#ffbf3d", "#061528", 80],
+  ["blue", "Blue Wave", "#53c1ff", "#061528", 80],
+  ["aurora", "Aurora", "#2fd1b5", "#aa7cff", 110],
+  ["sunset", "Sunset", "#ff8a5c", "#30174d", 115],
+  ["midnight", "Midnight", "#111827", "#2563eb", 95],
+  ["emerald", "Emerald", "#10b981", "#052e2b", 95],
+  ["ruby", "Ruby", "#ef4444", "#3b0712", 105],
+  ["violet", "Violet", "#8b5cf6", "#160f32", 105],
+  ["silver", "Silver", "#d8e4ef", "#293445", 90],
+  ["cosmic", "Cosmic", "#38bdf8", "#f472b6", 125],
+].map(([key, title, start, end, cost]) => ({
+  id: `banner-${key}`,
+  type: "banner",
+  title: `${title} Banner`,
+  description: `${title} profile backdrop for your whale banner.`,
+  cost,
+  categoryLabel: "Profile Banner",
+  colors: [start, end],
+}));
+
+const DEXTRA_BORDER_ITEMS = [
+  ["gold", "Gold", "#ffbf3d", 70],
+  ["wave", "Wave", "#53c1ff", 70],
+  ["neon", "Neon", "#ff5c7a", 95],
+  ["emerald", "Emerald", "#34d399", 80],
+  ["violet", "Violet", "#a78bfa", 80],
+  ["ruby", "Ruby", "#fb7185", 85],
+  ["silver", "Silver", "#d8e4ef", 75],
+  ["mint", "Mint", "#5eead4", 80],
+  ["orange", "Orange", "#fb923c", 80],
+  ["cosmic", "Cosmic", "#60a5fa", 100],
+].map(([key, title, color, cost]) => ({
+  id: `border-${key}`,
+  type: "profileBorder",
+  title: `${title} Profile Border`,
+  description: `${title} ring for your profile picture.`,
+  cost,
+  categoryLabel: "Profile Border",
+  color,
+}));
+
+const DEXTRA_PRIMARY_COLORS = [
+  ["sky", "Sky", "#32b8f0"],
+  ["mint", "Mint", "#2fd1b5"],
+  ["coral", "Coral", "#ff7f7f"],
+  ["royal", "Royal", "#2563eb"],
+  ["teal", "Teal", "#0f766e"],
+  ["lime", "Lime", "#84cc16"],
+  ["emerald", "Emerald", "#10b981"],
+  ["violet", "Violet", "#8b5cf6"],
+  ["plum", "Plum", "#a855f7"],
+  ["rose", "Rose", "#f43f5e"],
+  ["ruby", "Ruby", "#dc2626"],
+  ["orange", "Orange", "#f97316"],
+  ["amber", "Amber", "#f59e0b"],
+  ["gold", "Gold", "#facc15"],
+  ["slate", "Slate", "#64748b"],
+  ["charcoal", "Charcoal", "#334155"],
+  ["aqua", "Aqua", "#06b6d4"],
+  ["periwinkle", "Periwinkle", "#818cf8"],
+  ["bubblegum", "Bubblegum", "#f472b6"],
+  ["forest", "Forest", "#15803d"],
+].map(([key, title, color], index) => ({
+  id: `whale-primary-${key}`,
+  type: "whalePrimary",
+  title: `${title} Whale`,
+  description: `${title} primary whale color.`,
+  cost: 50 + (index % 5) * 10,
+  categoryLabel: "Whale Primary Color",
+  color,
+}));
+
+const DEXTRA_SECONDARY_COLORS = [
+  ["cream", "Cream", "#fff2c2"],
+  ["lavender", "Lavender", "#d9c7ff"],
+  ["seafoam", "Seafoam", "#bdf8e7"],
+  ["pearl", "Pearl", "#f8fafc"],
+  ["blush", "Blush", "#ffd1dc"],
+  ["lemon", "Lemon", "#fef08a"],
+  ["mint", "Mint", "#bbf7d0"],
+  ["sky", "Sky", "#bae6fd"],
+  ["aqua", "Aqua", "#a5f3fc"],
+  ["violet", "Violet", "#ddd6fe"],
+  ["rose", "Rose", "#fecdd3"],
+  ["sand", "Sand", "#fde68a"],
+  ["silver", "Silver", "#d8e4ef"],
+  ["ice", "Bright Ice", "#e0f2fe"],
+  ["peach", "Peach", "#fed7aa"],
+  ["orchid", "Orchid", "#f5d0fe"],
+  ["lime", "Lime", "#d9f99d"],
+  ["teal", "Teal", "#99f6e4"],
+  ["blue", "Blue", "#bfdbfe"],
+  ["graphite", "Graphite", "#cbd5e1"],
+].map(([key, title, color], index) => ({
+  id: `whale-secondary-${key}`,
+  type: "whaleSecondary",
+  title: `${title} Belly`,
+  description: `${title} secondary whale color.`,
+  cost: 45 + (index % 5) * 10,
+  categoryLabel: "Whale Secondary Color",
+  color,
+}));
+
+const DEXTRA_ACCESSORY_ITEMS = [
+  ["medal", "Gold Medal", 80],
+  ["briefcase", "Mini Briefcase", 90],
+  ["star", "Star Charm", 100],
+  ["crown", "Crown Charm", 115],
+  ["trophy", "Trophy Charm", 120],
+  ["lightning", "Lightning Bolt", 105],
+  ["gem", "Gem Charm", 110],
+  ["book", "Study Book", 95],
+  ["heart", "Heart Charm", 95],
+  ["ribbon", "Ribbon Badge", 100],
+].map(([accessory, title, cost]) => ({
+  id: `whale-accessory-${accessory}`,
+  type: "whaleAccessory",
+  title,
+  description: `${title} hanging from the whale's flipper.`,
+  cost,
+  categoryLabel: "Whale Accessory",
+  accessory,
+}));
+
+const DEXTRA_NAME_EFFECT_ITEMS = [
+  ["glow", "Glow", "#ffd980", 120],
+  ["sky", "Sky", "#9fe0ff", 120],
+  ["mint", "Mint", "#8fffe1", 125],
+  ["ruby", "Ruby", "#ff8ea3", 130],
+  ["violet", "Violet", "#d8b4fe", 130],
+  ["emerald", "Emerald", "#86efac", 125],
+  ["sunset", "Sunset", "#ffb86b", 135],
+  ["silver", "Silver", "#e5eef9", 125],
+  ["cosmic", "Cosmic", "#c4b5fd", 145],
+  ["champion", "Champion", "#ffbf3d", 150],
+].map(([key, title, color, cost]) => ({
+  id: `name-${key}`,
+  type: "nameEffect",
+  title: `${title} Name Effect`,
+  description: `${title} accent treatment for your display name.`,
+  cost,
+  categoryLabel: "Name Effect",
+  color,
+}));
+
 const DEXTRA_COSMETIC_ITEMS = [
-  {
-    id: "banner-gold",
-    type: "banner",
-    title: "Gold Spotlight Banner",
-    description: "Warm gold profile banner for standout practice streaks.",
-    cost: 80,
-    categoryLabel: "Profile Banner",
-  },
-  {
-    id: "banner-blue",
-    type: "banner",
-    title: "Blue Wave Banner",
-    description: "Cool blue profile banner with a clean competition look.",
-    cost: 80,
-    categoryLabel: "Profile Banner",
-  },
-  {
-    id: "banner-aurora",
-    type: "banner",
-    title: "Aurora Banner",
-    description: "A bright profile backdrop with teal and violet light.",
-    cost: 110,
-    categoryLabel: "Profile Banner",
-  },
-  {
-    id: "border-gold",
-    type: "profileBorder",
-    title: "Gold Profile Border",
-    description: "A polished gold ring for your profile picture.",
-    cost: 70,
-    categoryLabel: "Profile Border",
-  },
-  {
-    id: "border-wave",
-    type: "profileBorder",
-    title: "Wave Profile Border",
-    description: "A blue profile ring that matches the mascot.",
-    cost: 70,
-    categoryLabel: "Profile Border",
-  },
-  {
-    id: "border-neon",
-    type: "profileBorder",
-    title: "Neon Profile Border",
-    description: "A high-contrast profile ring with a soft glow.",
-    cost: 95,
-    categoryLabel: "Profile Border",
-  },
-  {
-    id: "whale-primary-sky",
-    type: "whalePrimary",
-    title: "Sky Whale",
-    description: "A lighter blue primary whale color.",
-    cost: 55,
-    categoryLabel: "Whale Primary Color",
-    color: "#32b8f0",
-  },
-  {
-    id: "whale-primary-mint",
-    type: "whalePrimary",
-    title: "Mint Whale",
-    description: "A green-blue primary whale color.",
-    cost: 65,
-    categoryLabel: "Whale Primary Color",
-    color: "#2fd1b5",
-  },
-  {
-    id: "whale-primary-coral",
-    type: "whalePrimary",
-    title: "Coral Whale",
-    description: "A warm coral primary whale color.",
-    cost: 75,
-    categoryLabel: "Whale Primary Color",
-    color: "#ff7f7f",
-  },
-  {
-    id: "whale-secondary-cream",
-    type: "whaleSecondary",
-    title: "Cream Belly",
-    description: "A soft cream secondary whale color.",
-    cost: 45,
-    categoryLabel: "Whale Secondary Color",
-    color: "#fff2c2",
-  },
-  {
-    id: "whale-secondary-lavender",
-    type: "whaleSecondary",
-    title: "Lavender Belly",
-    description: "A lavender secondary whale color.",
-    cost: 55,
-    categoryLabel: "Whale Secondary Color",
-    color: "#d9c7ff",
-  },
-  {
-    id: "whale-secondary-seafoam",
-    type: "whaleSecondary",
-    title: "Seafoam Belly",
-    description: "A seafoam secondary whale color.",
-    cost: 55,
-    categoryLabel: "Whale Secondary Color",
-    color: "#bdf8e7",
-  },
-  {
-    id: "whale-accessory-medal",
-    type: "whaleAccessory",
-    title: "Gold Medal",
-    description: "A medal that hangs from the whale's flipper.",
-    cost: 80,
-    categoryLabel: "Whale Accessory",
-    accessory: "medal",
-  },
-  {
-    id: "whale-accessory-briefcase",
-    type: "whaleAccessory",
-    title: "Mini Briefcase",
-    description: "A tiny case for business-roleplay energy.",
-    cost: 90,
-    categoryLabel: "Whale Accessory",
-    accessory: "briefcase",
-  },
-  {
-    id: "whale-accessory-star",
-    type: "whaleAccessory",
-    title: "Star Charm",
-    description: "A star charm that swings under the whale's flipper.",
-    cost: 100,
-    categoryLabel: "Whale Accessory",
-    accessory: "star",
-  },
-  {
-    id: "name-glow",
-    type: "nameEffect",
-    title: "Glow Name Effect",
-    description: "Adds a soft gold glow to your profile display name.",
-    cost: 120,
-    categoryLabel: "Name Effect",
-  },
-  {
-    id: "name-sky",
-    type: "nameEffect",
-    title: "Sky Name Effect",
-    description: "Adds a blue accent treatment to your profile name.",
-    cost: 120,
-    categoryLabel: "Name Effect",
-  },
+  ...DEXTRA_BANNER_ITEMS,
+  ...DEXTRA_BORDER_ITEMS,
+  ...DEXTRA_PRIMARY_COLORS,
+  ...DEXTRA_SECONDARY_COLORS,
+  ...DEXTRA_ACCESSORY_ITEMS,
+  ...DEXTRA_NAME_EFFECT_ITEMS,
 ];
 
 const DEXTRA_DEFAULT_ITEMS = [
@@ -309,6 +316,61 @@ function renderDextraAccessory(type) {
     `;
   }
 
+  if (type === "crown") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="381" class="whale-accessory-string" />
+      <path d="M403 408l7-34 16 20 9-25 11 25 16-20 7 34z" class="whale-accessory-fill whale-crown" />
+      <path d="M407 410h55" stroke="#061528" stroke-width="5" stroke-linecap="round" opacity="0.26" />
+    `;
+  }
+
+  if (type === "trophy") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="378" class="whale-accessory-string" />
+      <path d="M418 383h32v20c0 12-7 21-16 21s-16-9-16-21z" class="whale-accessory-fill whale-trophy" />
+      <path d="M418 389h-12c0 15 7 23 17 25M450 389h12c0 15-7 23-17 25" fill="none" stroke="#061528" stroke-width="5" stroke-linecap="round" opacity="0.35" />
+      <path d="M434 424v15M419 439h30" stroke="#061528" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+    `;
+  }
+
+  if (type === "lightning") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="381" class="whale-accessory-string" />
+      <path d="M442 372l-31 42h23l-8 30 34-44h-23z" class="whale-accessory-fill whale-lightning" />
+    `;
+  }
+
+  if (type === "gem") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="381" class="whale-accessory-string" />
+      <path d="M434 374l31 18-31 45-31-45z" class="whale-accessory-fill whale-gem" />
+      <path d="M403 392h62M434 374l-12 18 12 45 12-45z" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.42" />
+    `;
+  }
+
+  if (type === "book") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="380" class="whale-accessory-string" />
+      <path d="M399 387c14-7 25-6 35 2 10-8 21-9 35-2v45c-14-6-25-5-35 2-10-7-21-8-35-2z" class="whale-accessory-fill whale-book" />
+      <path d="M434 389v45M410 402c8-2 14-1 19 3M439 405c6-4 12-5 19-3" fill="none" stroke="#061528" stroke-width="4" stroke-linecap="round" opacity="0.3" />
+    `;
+  }
+
+  if (type === "heart") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="380" class="whale-accessory-string" />
+      <path d="M434 433s-32-18-32-40c0-11 8-19 18-19 7 0 12 4 14 9 3-5 8-9 15-9 10 0 18 8 18 19 0 22-33 40-33 40z" class="whale-accessory-fill whale-heart" />
+    `;
+  }
+
+  if (type === "ribbon") {
+    return `
+      <line x1="434" y1="331" x2="434" y2="378" class="whale-accessory-string" />
+      <circle cx="434" cy="396" r="19" class="whale-accessory-fill whale-ribbon" />
+      <path d="M421 410l-11 27 18-7 6 16 9-34M447 410l11 27-18-7-6 16-9-34" class="whale-accessory-fill whale-ribbon-tail" />
+    `;
+  }
+
   return "";
 }
 
@@ -339,7 +401,7 @@ function renderDextraWhale(user, overrides = {}) {
           <feComposite in="color" in2="SourceAlpha" operator="in" />
         </filter>
       </defs>
-      <image href="assets/whale-primary-mask.png" width="658" height="456" filter="url(#${id}-primary)" />
+      <image href="assets/whale-base-mask.png" width="658" height="456" filter="url(#${id}-primary)" />
       <image href="assets/whale-shadow-mask.png" width="658" height="456" filter="url(#${id}-shadow)" />
       <image href="assets/whale-secondary-mask.png" width="658" height="456" filter="url(#${id}-secondary)" />
       <image href="assets/whale-highlight-mask.png" width="658" height="456" filter="url(#${id}-highlight)" />
@@ -363,10 +425,22 @@ function renderDextraShopPreview(item, user) {
   }
 
   if (item.type === "profileBorder") {
-    return `<div class="shop-item-preview ${dextraEscapeHtml(item.id)}"><span>Border</span></div>`;
+    const borderColor = item.color || "#53c1ff";
+    return `<div class="shop-item-preview border-preview" style="--shop-preview-border: ${dextraEscapeHtml(borderColor)}"><span>Border</span></div>`;
   }
 
-  return `<div class="shop-item-preview ${dextraEscapeHtml(item.id)}"><span>${item.type === "banner" ? "Banner" : "Name"}</span></div>`;
+  if (item.type === "banner") {
+    const start = item.colors?.[0] || "#53c1ff";
+    const end = item.colors?.[1] || "#061528";
+    return `<div class="shop-item-preview banner-preview" style="--shop-preview-start: ${dextraEscapeHtml(start)}; --shop-preview-end: ${dextraEscapeHtml(end)}"><span>Banner</span></div>`;
+  }
+
+  if (item.type === "nameEffect") {
+    const color = item.color || "#ffd980";
+    return `<div class="shop-item-preview name-preview" style="--shop-preview-name: ${dextraEscapeHtml(color)}"><span>Name</span></div>`;
+  }
+
+  return `<div class="shop-item-preview"><span>${dextraEscapeHtml(item.title || "Item")}</span></div>`;
 }
 
 window.DEXTRA_COSMETICS = {

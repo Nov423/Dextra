@@ -978,32 +978,30 @@ function bindLesson() {
     goToNextQuestion();
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (!adminMode || shouldIgnoreShortcut(event)) {
-      return;
-    }
+  window.DEXTRA_TESTING_SHORTCUTS = {
+    answerCorrect() {
+      if (!adminMode || currentScreen !== "question" || selectedAnswer !== null) {
+        return false;
+      }
 
-    const key = event.key.toLowerCase();
-    if (key === "c" && currentScreen === "question" && selectedAnswer === null) {
       const question = activeQuestions[currentQuestionIndex];
       const correctButton = Array.from(choiceGrid.querySelectorAll("[data-choice]")).find(
         (button) => Number(button.dataset.choice) === question.answer
       );
       correctButton?.click();
+      return Boolean(correctButton);
+    },
+  };
+
+  window.addEventListener("dextra:user-updated", (event) => {
+    const updatedUser = normalizePracticeUser(event.detail?.user || {});
+    const sameEmail = updatedUser.email && updatedUser.email.toLowerCase() === user.email?.toLowerCase();
+    if (!sameEmail) {
       return;
     }
 
-    if (key === "x") {
-      user.coins = 0;
-      user.coinsEarned = 0;
-      user.currentStreak = 0;
-      user.bestStreak = 0;
-      user.testingProgress = {};
-      user.lastDailyWheelDate = "";
-      persistUser(user);
-      updateLessonCoinDisplay(user);
-      window.location.href = `testing-roadmap.html?category=${category.id}`;
-    }
+    Object.assign(user, updatedUser);
+    updateLessonCoinDisplay(user);
   });
 
   document.getElementById("lessonSignOutButton").addEventListener("click", () => {

@@ -71,7 +71,7 @@ function getVirtualLessonId(chapter, lessonNumber) {
 }
 
 function getLessonHref(categoryId, chapterId, lessonNumber) {
-  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523i`;
+  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260524e`;
 }
 
 function getProgressMap(user) {
@@ -195,19 +195,15 @@ function bindRoadmap() {
     startLink.textContent = lessonButton.dataset.lessonDone === "true" ? "Redo Lesson" : "Start Lesson";
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (!isAdminUser(user) || shouldIgnoreShortcut(event) || event.key.toLowerCase() !== "x") {
+  window.addEventListener("dextra:user-updated", (event) => {
+    const updatedUser = normalizePracticeUser(event.detail?.user || {});
+    const sameEmail = updatedUser.email && updatedUser.email.toLowerCase() === user.email?.toLowerCase();
+    if (!sameEmail) {
       return;
     }
 
-    user.coins = 0;
-    user.coinsEarned = 0;
-    user.currentStreak = 0;
-    user.bestStreak = 0;
-    user.testingProgress = {};
-    user.lastDailyWheelDate = "";
-    saveUser(user);
-    window.location.reload();
+    Object.assign(user, updatedUser);
+    updateRoadmapCoinDisplay(user);
   });
 
   signOut("roadmapSignOutButton");
