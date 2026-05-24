@@ -1,5 +1,6 @@
 const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
+const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 
 function getSessionUser() {
   try {
@@ -31,7 +32,26 @@ function normalizePracticeUser(user) {
   user.equippedNameEffect ||= "";
   user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
   user.equippedClothing ||= "";
+  user.lastDailyWheelDate ||= "";
   return user;
+}
+
+function isAdminUser(user) {
+  return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function shouldIgnoreShortcut(event) {
+  const target = event.target;
+  const tagName = target?.tagName?.toLowerCase() || "";
+  return (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    tagName === "input" ||
+    tagName === "textarea" ||
+    tagName === "select" ||
+    target?.isContentEditable
+  );
 }
 
 function formatCoins(value) {
@@ -51,7 +71,7 @@ function getVirtualLessonId(chapter, lessonNumber) {
 }
 
 function getLessonHref(categoryId, chapterId, lessonNumber) {
-  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523d`;
+  return `testing-lesson.html?category=${categoryId}&chapter=${chapterId}&lesson=${lessonNumber}&htmlv=20260523e`;
 }
 
 function getProgressMap(user) {
@@ -173,6 +193,21 @@ function bindRoadmap() {
     });
     startLink.href = lessonButton.dataset.lessonHref;
     startLink.textContent = lessonButton.dataset.lessonDone === "true" ? "Redo Lesson" : "Start Lesson";
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!isAdminUser(user) || shouldIgnoreShortcut(event) || event.key.toLowerCase() !== "x") {
+      return;
+    }
+
+    user.coins = 0;
+    user.coinsEarned = 0;
+    user.currentStreak = 0;
+    user.bestStreak = 0;
+    user.testingProgress = {};
+    user.lastDailyWheelDate = "";
+    saveUser(user);
+    window.location.reload();
   });
 
   signOut("roadmapSignOutButton");

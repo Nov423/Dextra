@@ -3,6 +3,14 @@ const USERS_KEY = "dextraUsers";
 const CHECKPOINT_INTERVAL = 5;
 const MOTIVATION_CHECKPOINTS = new Set([5, 15]);
 const SHOP_CHECKPOINT = 10;
+const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+const WHEEL_REWARDS = [
+  { label: "10 coins", coins: 10, weight: 60 },
+  { label: "30 coins", coins: 30, weight: 20 },
+  { label: "50 coins", coins: 50, weight: 10 },
+  { label: "100 coins", coins: 100, weight: 9 },
+  { label: "500 coins", coins: 500, weight: 1 },
+];
 
 const MOTIVATION_IMAGES = [
   {
@@ -58,6 +66,36 @@ const LESSON_SHOP_ITEMS = [
     description: "A simple cap for checkpoint rewards.",
     cost: 20,
   },
+  {
+    id: "clothing-sneakers",
+    title: "Lucky Sneakers",
+    description: "Bright shoes for sprinting through review sets.",
+    cost: 35,
+  },
+  {
+    id: "clothing-tie",
+    title: "Pitch Tie",
+    description: "A sharp tie for roleplay confidence.",
+    cost: 25,
+  },
+  {
+    id: "clothing-backpack",
+    title: "Prep Backpack",
+    description: "A packed bag for long practice days.",
+    cost: 40,
+  },
+  {
+    id: "clothing-sunglasses",
+    title: "Focus Shades",
+    description: "A calm look for high-pressure questions.",
+    cost: 50,
+  },
+  {
+    id: "clothing-watch",
+    title: "Timer Watch",
+    description: "A polished watch for keeping pace.",
+    cost: 60,
+  },
 ];
 
 function getJson(key) {
@@ -90,6 +128,7 @@ function normalizePracticeUser(user) {
   user.equippedNameEffect ||= "";
   user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
   user.equippedClothing ||= "";
+  user.lastDailyWheelDate ||= "";
   return user;
 }
 
@@ -106,6 +145,48 @@ function updateLessonCoinDisplay(user) {
 
 function getCoinReward() {
   return Math.floor(Math.random() * 6) + 5;
+}
+
+function getMakeupCoinReward() {
+  return Math.floor(Math.random() * 5) + 3;
+}
+
+function getLocalDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function pickWheelReward() {
+  const roll = Math.random() * 100;
+  let total = 0;
+  for (const reward of WHEEL_REWARDS) {
+    total += reward.weight;
+    if (roll < total) {
+      return reward;
+    }
+  }
+  return WHEEL_REWARDS[0];
+}
+
+function isAdminUser(user) {
+  return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function shouldIgnoreShortcut(event) {
+  const target = event.target;
+  const tagName = target?.tagName?.toLowerCase() || "";
+  return (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    tagName === "input" ||
+    tagName === "textarea" ||
+    tagName === "select" ||
+    target?.isContentEditable
+  );
 }
 
 function getMotivationImage() {
@@ -396,10 +477,19 @@ function renderLessonShop(user, persist) {
   `;
 }
 
-function bindLessonShop(container, user, persist, updateCoins) {
+function bindLessonShop(container, user, persist, updateCoins, onDone) {
+  let shopResolved = false;
+
   container.addEventListener("click", (event) => {
+    const skipButton = event.target.closest("[data-shop-skip]");
+    if (skipButton) {
+      shopResolved = true;
+      onDone();
+      return;
+    }
+
     const button = event.target.closest("[data-clothing-id]");
-    if (!button || button.disabled) {
+    if (!button || button.disabled || shopResolved) {
       return;
     }
 
@@ -422,11 +512,16 @@ function bindLessonShop(container, user, persist, updateCoins) {
     user.equippedClothing = item.id;
     persist();
     updateCoins(user);
+    shopResolved = true;
 
     const shopList = container.querySelector(".lesson-shop-list");
     if (shopList) {
       shopList.outerHTML = renderLessonShop(user, persist);
     }
+    container.querySelectorAll("[data-clothing-id], [data-shop-skip]").forEach((control) => {
+      control.disabled = true;
+    });
+    window.setTimeout(onDone, 240);
   });
 }
 
@@ -474,6 +569,8 @@ function bindLesson() {
   const questionTotal = questions.length;
   const canEarnCoins = !progress.completedLessons.includes(lesson.virtualId);
   const rewardedQuestions = getRewardedQuestions(progress, lesson.virtualId);
+  const firstMissedQuestionKeys = new Set();
+  const adminMode = isAdminUser(user);
 
   let currentQuestionIndex = 0;
   let selectedAnswer = null;
@@ -536,13 +633,6 @@ function bindLesson() {
       });
       return;
     }
-
-    checkpointScreens.push({
-      checkpointNumber,
-      type: "summary",
-      title: "Checkpoint complete",
-      message: "Keep moving. Missed questions will come back at the end.",
-    });
   }
 
   function startRerunMode() {
@@ -560,10 +650,19 @@ function bindLesson() {
     }
     progress.activeChapterId = lessonNumber >= 10 ? getNextChapterId(category, chapter.id) : chapter.id;
     persistLessonUser();
+    if (user.lastDailyWheelDate !== getLocalDateKey()) {
+      renderWheelScreen();
+      return;
+    }
     window.location.href = `testing-roadmap.html?category=${category.id}`;
   }
 
   function goToNextQuestion() {
+    if (currentScreen === "wheel") {
+      window.location.href = `testing-roadmap.html?category=${category.id}`;
+      return;
+    }
+
     if (currentScreen === "checkpoint") {
       currentScreen = "question";
       continueAfterQuestion();
@@ -575,6 +674,11 @@ function bindLesson() {
       return;
     }
 
+    continueAfterQuestion();
+  }
+
+  function leaveCheckpointScreen() {
+    currentScreen = "question";
     continueAfterQuestion();
   }
 
@@ -618,14 +722,11 @@ function bindLesson() {
     modeLabel.classList.toggle("rerun-active", false);
     promptNode.textContent = screen.title;
     feedbackNode.textContent = "";
-    nextButton.textContent =
-      screen.checkpointNumber === questionTotal && missedQuestions.length
-        ? "Review Missed Questions"
-        : "Continue";
-    nextButton.disabled = false;
-
     const isMotivation = screen.type === "motivation";
     const isShop = screen.type === "shop";
+    nextButton.textContent = isShop ? "Skip Shop" : "Continue";
+    nextButton.disabled = false;
+
     choiceGrid.innerHTML = `
       <article class="lesson-checkpoint-card ${isShop ? "shop-checkpoint" : ""}">
         ${
@@ -649,12 +750,58 @@ function bindLesson() {
           <p>${escapeHtml(screen.message)}</p>
         </div>
         ${isShop ? renderLessonShop(user, persistLessonUser) : ""}
+        ${isShop ? `<button class="button secondary shop-skip-button" type="button" data-shop-skip="true">Skip Shop</button>` : ""}
       </article>
     `;
 
     if (isShop) {
-      bindLessonShop(choiceGrid, user, persistLessonUser, updateLessonCoinDisplay);
+      bindLessonShop(choiceGrid, user, persistLessonUser, updateLessonCoinDisplay, leaveCheckpointScreen);
     }
+  }
+
+  function renderWheelScreen() {
+    currentScreen = "wheel";
+    selectedAnswer = "wheel";
+    modeLabel.textContent = "Daily reward wheel";
+    modeLabel.classList.toggle("rerun-active", false);
+    promptNode.textContent = "Spin for today's lesson bonus";
+    feedbackNode.textContent = "";
+    nextButton.textContent = "Back to Roadmap";
+    nextButton.disabled = true;
+    choiceGrid.innerHTML = `
+      <article class="lesson-checkpoint-card reward-wheel-card">
+        <div class="reward-wheel" aria-hidden="true">
+          ${WHEEL_REWARDS.map((reward) => `<span>${escapeHtml(reward.label)}</span>`).join("")}
+        </div>
+        <div class="lesson-checkpoint-copy">
+          <p class="eyebrow">Daily Bonus</p>
+          <h3>First lesson complete today</h3>
+          <p>Spin once per day for extra coins.</p>
+        </div>
+        <button class="button primary wheel-spin-button" type="button" data-spin-wheel="true">Spin Wheel</button>
+      </article>
+    `;
+
+    const spinButton = choiceGrid.querySelector("[data-spin-wheel]");
+    const wheel = choiceGrid.querySelector(".reward-wheel");
+    spinButton.addEventListener("click", () => {
+      const reward = pickWheelReward();
+      const turns = 5 + Math.floor(Math.random() * 2);
+      const finalAngle = 360 * turns + Math.floor(Math.random() * 360);
+      spinButton.disabled = true;
+      wheel.style.setProperty("--wheel-rotation", `${finalAngle}deg`);
+      wheel.classList.add("spinning");
+      window.setTimeout(() => {
+        applyCoinReward(user, reward.coins);
+        user.lastDailyWheelDate = getLocalDateKey();
+        persistLessonUser();
+        updateLessonCoinDisplay(user);
+        playCoinSound();
+        animateCoinReward(reward.coins, spinButton);
+        feedbackNode.textContent = `Daily wheel bonus: +${reward.coins} coins.`;
+        nextButton.disabled = false;
+      }, 900);
+    });
   }
 
   function renderQuestion() {
@@ -674,11 +821,13 @@ function bindLesson() {
       modeLabel.classList.remove("rerun-active");
     }
 
-    choiceGrid.innerHTML = question.choices
+    const shuffledChoices = shuffleItems(question.choices.map((choice, index) => ({ choice, index })));
+
+    choiceGrid.innerHTML = shuffledChoices
       .map(
-        (choice, index) => `
+        ({ choice, index }) => `
           <button class="choice-card" type="button" data-choice="${index}">
-            ${choice}
+            ${escapeHtml(choice)}
           </button>
         `
       )
@@ -694,13 +843,12 @@ function bindLesson() {
         const correct = selectedAnswer === question.answer;
         const questionKey = getQuestionKey(question);
         let rewardMessage = "";
-        let checkpointMessage = "";
 
         if (correct) {
           playCorrectSound();
           updateCorrectStreak(user);
           if (canEarnCoins && !rewardedQuestions.includes(questionKey)) {
-            const reward = getCoinReward();
+            const reward = firstMissedQuestionKeys.has(questionKey) ? getMakeupCoinReward() : getCoinReward();
             rewardedQuestions.push(questionKey);
             applyCoinReward(user, reward);
             rewardMessage = ` +${reward} coins.`;
@@ -715,6 +863,7 @@ function bindLesson() {
           }
         } else {
           user.currentStreak = 0;
+          firstMissedQuestionKeys.add(questionKey);
           if (!isRerunMode && !missedQuestions.some((item) => getQuestionKey(item) === questionKey)) {
             missedQuestions.push(question);
           }
@@ -723,8 +872,10 @@ function bindLesson() {
         if (!isRerunMode) {
           const checkpointNumber = currentQuestionIndex + 1;
 
-          if (checkpointNumber % CHECKPOINT_INTERVAL === 0) {
-            checkpointMessage = " Checkpoint screen next.";
+          if (
+            checkpointNumber % CHECKPOINT_INTERVAL === 0 &&
+            (MOTIVATION_CHECKPOINTS.has(checkpointNumber) || checkpointNumber === SHOP_CHECKPOINT)
+          ) {
             queueCheckpointScreen(checkpointNumber);
           }
         }
@@ -743,7 +894,7 @@ function bindLesson() {
           }
         });
 
-        feedbackNode.textContent = `${getAnswerFeedback(question, selectedAnswer)}${rewardMessage}${checkpointMessage}`;
+        feedbackNode.textContent = `${getAnswerFeedback(question, selectedAnswer)}${rewardMessage}`;
         setNextButtonText();
         nextButton.disabled = false;
       });
@@ -756,6 +907,34 @@ function bindLesson() {
     }
 
     goToNextQuestion();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!adminMode || shouldIgnoreShortcut(event)) {
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+    if (key === "c" && currentScreen === "question" && selectedAnswer === null) {
+      const question = activeQuestions[currentQuestionIndex];
+      const correctButton = Array.from(choiceGrid.querySelectorAll("[data-choice]")).find(
+        (button) => Number(button.dataset.choice) === question.answer
+      );
+      correctButton?.click();
+      return;
+    }
+
+    if (key === "x") {
+      user.coins = 0;
+      user.coinsEarned = 0;
+      user.currentStreak = 0;
+      user.bestStreak = 0;
+      user.testingProgress = {};
+      user.lastDailyWheelDate = "";
+      persistUser(user);
+      updateLessonCoinDisplay(user);
+      window.location.href = `testing-roadmap.html?category=${category.id}`;
+    }
   });
 
   document.getElementById("lessonSignOutButton").addEventListener("click", () => {
