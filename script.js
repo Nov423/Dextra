@@ -14,14 +14,14 @@ const SHOP_GROUPS = [
 ];
 
 const LEADERBOARD_FILLERS = [
-  { name: "KoroKage", bestStreak: 48, coinsEarned: 520 },
-  { name: "Jacbo", bestStreak: 45, coinsEarned: 490 },
-  { name: "ChenThePen", bestStreak: 39, coinsEarned: 450 },
-  { name: "Krackelackling", bestStreak: 36, coinsEarned: 410 },
-  { name: "ArthurCoviello", bestStreak: 33, coinsEarned: 375 },
-  { name: "TetrSweat", bestStreak: 28, coinsEarned: 340 },
-  { name: "ChangforChange", bestStreak: 24, coinsEarned: 305 },
-  { name: "PlaneGuy", bestStreak: 20, coinsEarned: 260 },
+  { name: "Korokage", bestStreak: 487, coinsEarned: 5200, avatar: "assets/avatars/mountain.svg" },
+  { name: "Jacbo", bestStreak: 452, coinsEarned: 4900, avatar: "assets/avatars/ocean.svg" },
+  { name: "ChenThePen", bestStreak: 431, coinsEarned: 4500, avatar: "assets/avatars/sunset.svg" },
+  { name: "Krackelackling", bestStreak: 418, coinsEarned: 4100, avatar: "assets/avatars/galaxy.svg" },
+  { name: "ArthurCoviello", bestStreak: 403, coinsEarned: 3750, avatar: "assets/avatars/forest.svg" },
+  { name: "TetrSweat", bestStreak: 391, coinsEarned: 3400, avatar: "assets/avatars/comet.svg" },
+  { name: "ChangforChange", bestStreak: 379, coinsEarned: 3050, avatar: "assets/avatars/globe.svg" },
+  { name: "PlaneGuy", bestStreak: 366, coinsEarned: 2600, avatar: "assets/avatars/plane.svg" },
 ];
 
 const SHOP_ITEM_MAP = COSMETICS?.ITEM_MAP || new Map(SHOP_ITEMS.map((item) => [item.id, item]));
@@ -301,6 +301,7 @@ function bindHomeSession() {
         name: entry.name,
         bestStreak: Number(entry.bestStreak || entry.currentStreak || entry.streak || 0),
         coinsEarned: Number(entry.coinsEarned || 0),
+        avatar: entry.profileImageData || "",
         isCurrentUser: entry.email?.toLowerCase() === fullUser.email?.toLowerCase(),
       }));
 
@@ -337,7 +338,7 @@ function bindHomeSession() {
           <span class="leaderboard-flame" aria-hidden="true"></span>
           <div>
             <h3>Daily Practice Leaderboard</h3>
-            <p>Top streaks this week</p>
+            <p>Longest practice streaks</p>
           </div>
         </header>
         <div class="leaderboard-table" aria-label="Daily practice leaderboard">
@@ -354,7 +355,13 @@ function bindHomeSession() {
                 <article class="leaderboard-row ${medalClass}${entry.isCurrentUser ? " current-user" : ""}">
                   <span class="leaderboard-rank">${rank}</span>
                   <span class="leaderboard-user">
-                    <span class="leaderboard-avatar">${escapeHtml(getInitials(entry.name))}</span>
+                    <span class="leaderboard-avatar">
+                      ${
+                        entry.avatar
+                          ? `<img src="${escapeHtml(entry.avatar)}" alt="" />`
+                          : escapeHtml(getInitials(entry.name))
+                      }
+                    </span>
                     <strong>${escapeHtml(entry.name)}</strong>
                   </span>
                   <span class="leaderboard-score">

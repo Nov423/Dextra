@@ -69,6 +69,18 @@
     return user;
   }
 
+  function resetPurchasedCosmetics(user) {
+    user.ownedCosmetics = [];
+    user.ownedClothing = [];
+    user.equippedClothing = "";
+    user.equippedBanner = "banner-default";
+    user.equippedNameEffect = "name-effect-none";
+    user.equippedWhalePrimary = "whale-primary-ocean";
+    user.equippedWhaleSecondary = "whale-secondary-ice";
+    user.equippedWhaleAccessory = "whale-accessory-none";
+    user.equippedProfileBorder = "border-default";
+  }
+
   function updateCoinDisplays(user) {
     ["headerCoinCount", "profileCoinCount", "lessonCoinCount", "roadmapCoinCount", "shopCoinBalance", "coinsValue"].forEach((id) => {
       const node = document.getElementById(id);
@@ -153,6 +165,7 @@
         entry.bestStreak = 0;
         entry.testingProgress = {};
         entry.lastDailyWheelDate = "";
+        resetPurchasedCosmetics(entry);
       });
       window.location.reload();
     }
