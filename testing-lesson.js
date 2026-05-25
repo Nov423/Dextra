@@ -4,6 +4,7 @@ const CHECKPOINT_INTERVAL = 5;
 const MOTIVATION_CHECKPOINTS = new Set([5, 15]);
 const SHOP_CHECKPOINT = 10;
 const SHOP_PURCHASE_LIMIT = 3;
+const CHECKPOINT_SHOP_DISCOUNT_RATE = 0.1;
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 const WHEEL_REWARDS = [
   { label: "10", coins: 10, weight: 60 },
@@ -48,57 +49,6 @@ const MOTIVATION_IMAGES = [
   },
 ];
 
-const LESSON_SHOP_ITEMS = [
-  {
-    id: "clothing-hoodie",
-    title: "Practice Hoodie",
-    description: "A clean hoodie for your profile closet.",
-    cost: 30,
-  },
-  {
-    id: "clothing-blazer",
-    title: "Gold Blazer",
-    description: "A competition-ready profile jacket.",
-    cost: 45,
-  },
-  {
-    id: "clothing-cap",
-    title: "Dextra Cap",
-    description: "A simple cap for checkpoint rewards.",
-    cost: 20,
-  },
-  {
-    id: "clothing-sneakers",
-    title: "Lucky Sneakers",
-    description: "Bright shoes for sprinting through review sets.",
-    cost: 35,
-  },
-  {
-    id: "clothing-tie",
-    title: "Pitch Tie",
-    description: "A sharp tie for roleplay confidence.",
-    cost: 25,
-  },
-  {
-    id: "clothing-backpack",
-    title: "Prep Backpack",
-    description: "A packed bag for long practice days.",
-    cost: 40,
-  },
-  {
-    id: "clothing-sunglasses",
-    title: "Focus Shades",
-    description: "A calm look for high-pressure questions.",
-    cost: 50,
-  },
-  {
-    id: "clothing-watch",
-    title: "Timer Watch",
-    description: "A polished watch for keeping pace.",
-    cost: 60,
-  },
-];
-
 function getJson(key) {
   try {
     return JSON.parse(localStorage.getItem(key) || "[]");
@@ -125,10 +75,7 @@ function normalizePracticeUser(user) {
   user.currentStreak = Math.max(0, Number(user.currentStreak || 0));
   user.bestStreak = Math.max(Number(user.bestStreak || 0), Number(user.streak || 0));
   user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
-  user.equippedBanner ||= "";
-  user.equippedNameEffect ||= "";
-  user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
-  user.equippedClothing ||= "";
+  window.DEXTRA_COSMETICS?.normalizeUser(user);
   user.lastDailyWheelDate ||= "";
   return user;
 }
@@ -466,9 +413,27 @@ function getRewardedQuestions(progress, lessonId) {
   return progress.rewardedQuestions[lessonId];
 }
 
+function getLessonCosmetics() {
+  return window.DEXTRA_COSMETICS || null;
+}
+
+function getLessonShopItems() {
+  return getLessonCosmetics()?.SHOP_ITEMS || [];
+}
+
+function getCheckpointShopCost(item) {
+  const cost = Number(item?.cost || 0);
+  return Math.max(1, Math.round(cost * (1 - CHECKPOINT_SHOP_DISCOUNT_RATE)));
+}
+
 function pickLessonShopOfferItems(user) {
-  const owned = new Set(user.ownedClothing || []);
-  return shuffleItems(LESSON_SHOP_ITEMS.filter((item) => !owned.has(item.id))).slice(0, SHOP_PURCHASE_LIMIT);
+  const cosmetics = getLessonCosmetics();
+  if (!cosmetics) {
+    return [];
+  }
+
+  cosmetics.normalizeUser(user);
+  return shuffleItems(getLessonShopItems().filter((item) => !cosmetics.isOwned(user, item))).slice(0, SHOP_PURCHASE_LIMIT);
 }
 
 function animateCoinReward(amount, originNode) {
@@ -498,52 +463,124 @@ function animateCoinReward(amount, originNode) {
   }
 }
 
-function renderLessonShopItem(user, item) {
-  const owned = new Set(user.ownedClothing || []);
-  const isOwned = owned.has(item.id);
-  const isEquipped = user.equippedClothing === item.id;
-  const canBuy = Number(user.coins || 0) >= item.cost;
-  const label = isEquipped ? "Equipped" : isOwned ? "Equip" : canBuy ? "Buy" : `Need ${formatCoins(item.cost - user.coins)}`;
+function getInitials(name) {
+  return String(name || "D")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "D";
+}
+
+function getDisplayUsername(user) {
+  if (isAdminUser(user)) {
+    return "Admin";
+  }
+
+  return user.username || String(user.email || user.name || "dextra-user").split("@")[0];
+}
+
+function getBannerStyle(item) {
+  const cosmetics = getLessonCosmetics();
+  if (!item?.colors?.length || !cosmetics) {
+    return "";
+  }
+
+  const start = cosmetics.escapeHtml(item.colors[0]);
+  const end = cosmetics.escapeHtml(item.colors[1] || item.colors[0]);
+  return `--profile-banner-start: ${start}; --profile-banner-end: ${end}; --profile-banner-border: ${start};`;
+}
+
+function getBorderStyle(item) {
+  const cosmetics = getLessonCosmetics();
+  if (!item?.color || !cosmetics) {
+    return "";
+  }
+
+  return `--profile-border-color: ${cosmetics.escapeHtml(item.color)};`;
+}
+
+function getNameStyle(item) {
+  const cosmetics = getLessonCosmetics();
+  if (!item?.color || !cosmetics) {
+    return "";
+  }
+
+  const color = cosmetics.escapeHtml(item.color);
+  return `--profile-name-effect-color: ${color}; --profile-name-effect-shadow: 0 0 18px ${color}99, 0 0 36px ${color}4d;`;
+}
+
+function createCheckpointPreviewUser(user, item) {
+  const cosmetics = getLessonCosmetics();
+  const previewUser = JSON.parse(JSON.stringify(user));
+  cosmetics?.normalizeUser(previewUser);
+  cosmetics?.equipItem(previewUser, item);
+  return previewUser;
+}
+
+function renderCheckpointBannerPreview(user, item) {
+  const cosmetics = getLessonCosmetics();
+  if (!cosmetics) {
+    return "";
+  }
+
+  const previewUser = createCheckpointPreviewUser(user, item);
+  const bannerItem = cosmetics.getItem(previewUser.equippedBanner);
+  const borderItem = cosmetics.getItem(previewUser.equippedProfileBorder);
+  const nameItem = cosmetics.getItem(previewUser.equippedNameEffect);
+  const picture = previewUser.profileImageData
+    ? `<img src="${previewUser.profileImageData}" alt="" />`
+    : `<span>${escapeHtml(getInitials(previewUser.name))}</span>`;
+
   return `
-    <article class="lesson-shop-item ${item.id}">
-      <div>
+    <div class="shop-banner-preview lesson-shop-preview" style="${getBannerStyle(bannerItem)}">
+      <div class="shop-banner-picture" style="${getBorderStyle(borderItem)}">${picture}</div>
+      <div class="shop-banner-whale">${cosmetics.renderWhale(previewUser)}</div>
+      <div class="shop-banner-copy">
+        <strong style="${getNameStyle(nameItem)}">@${escapeHtml(getDisplayUsername(previewUser))}</strong>
+        <span>${escapeHtml(previewUser.profileMessage || "Ready for DECA practice.")}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderLessonShopItem(user, item) {
+  const cosmetics = getLessonCosmetics();
+  const saleCost = getCheckpointShopCost(item);
+  const isOwned = Boolean(cosmetics?.isOwned(user, item));
+  const isEquipped = Boolean(cosmetics?.isEquipped(user, item));
+  const canBuy = Number(user.coins || 0) >= saleCost;
+  const label = isEquipped ? "Equipped" : isOwned ? "Owned" : canBuy ? "Buy + equip" : `Need ${formatCoins(saleCost - user.coins)}`;
+  return `
+    <article class="lesson-shop-item">
+      ${renderCheckpointBannerPreview(user, item)}
+      <div class="lesson-shop-item-copy">
+        <p class="eyebrow">${escapeHtml(item.categoryLabel || "Cosmetic")}</p>
         <strong>${escapeHtml(item.title)}</strong>
-        <span>${escapeHtml(item.description)}</span>
+        <span>${escapeHtml(item.description || "Customize your profile banner.")}</span>
+        <span class="lesson-shop-discount">10% checkpoint discount</span>
       </div>
       <button
-        class="button ${isEquipped ? "secondary" : "primary"}"
+        class="button primary"
         type="button"
-        data-clothing-id="${item.id}"
-        ${isEquipped || (!isOwned && !canBuy) ? "disabled" : ""}
+        data-cosmetic-id="${item.id}"
+        ${!isOwned && canBuy ? "" : "disabled"}
       >
-        ${label} • ${formatCoins(item.cost)}
+        ${label} • <s>${formatCoins(item.cost)}</s> ${formatCoins(saleCost)}
       </button>
     </article>
   `;
 }
 
 function renderLessonShop(user, offerItems) {
-  const owned = new Set(user.ownedClothing || []);
-  const ownedItems = LESSON_SHOP_ITEMS.filter((item) => owned.has(item.id));
-  const purchasableItems = offerItems.filter((item) => !owned.has(item.id));
   return `
     <div class="lesson-shop-list">
-      ${
-        ownedItems.length
-          ? `
-            <div class="lesson-shop-section">
-              <p class="eyebrow">Owned</p>
-              ${ownedItems.map((item) => renderLessonShopItem(user, item)).join("")}
-            </div>
-          `
-          : ""
-      }
       <div class="lesson-shop-section">
-        <p class="eyebrow">Available</p>
+        <p class="eyebrow">3 Random Discount Picks</p>
         ${
-          purchasableItems.length
-            ? purchasableItems.map((item) => renderLessonShopItem(user, item)).join("")
-            : `<p class="lesson-shop-empty">You already own everything in this shop.</p>`
+          offerItems.length
+            ? offerItems.map((item) => renderLessonShopItem(user, item)).join("")
+            : `<p class="lesson-shop-empty">You already own every checkpoint cosmetic.</p>`
         }
       </div>
     </div>
@@ -554,28 +591,26 @@ function bindLessonShop(container, user, persist, updateCoins, offerItems, onDon
   let shopResolved = false;
 
   container.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-clothing-id]");
+    const button = event.target.closest("[data-cosmetic-id]");
     if (!button || button.disabled || shopResolved) {
       return;
     }
 
-    const item = LESSON_SHOP_ITEMS.find((entry) => entry.id === button.dataset.clothingId);
-    if (!item) {
+    const cosmetics = getLessonCosmetics();
+    const item = cosmetics?.getItem(button.dataset.cosmeticId);
+    if (!cosmetics || !item) {
       return;
     }
 
-    user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
-    const ownsItem = user.ownedClothing.includes(item.id);
-
-    if (!ownsItem) {
-      if (Number(user.coins || 0) < item.cost) {
-        return;
-      }
-      user.coins = Math.max(0, Number(user.coins || 0) - item.cost);
-      user.ownedClothing.push(item.id);
+    const saleCost = getCheckpointShopCost(item);
+    if (Number(user.coins || 0) < saleCost) {
+      return;
     }
 
-    user.equippedClothing = item.id;
+    cosmetics.normalizeUser(user);
+    user.coins = Math.max(0, Number(user.coins || 0) - saleCost);
+    user.ownedCosmetics = [...new Set([...user.ownedCosmetics, item.id])];
+    cosmetics.equipItem(user, item);
     persist();
     updateCoins(user);
     shopResolved = true;
@@ -584,7 +619,7 @@ function bindLessonShop(container, user, persist, updateCoins, offerItems, onDon
     if (shopList) {
       shopList.outerHTML = renderLessonShop(user, offerItems);
     }
-    container.querySelectorAll("[data-clothing-id]").forEach((control) => {
+    container.querySelectorAll("[data-cosmetic-id]").forEach((control) => {
       control.disabled = true;
     });
     window.setTimeout(onDone, 240);
@@ -695,7 +730,7 @@ function bindLesson() {
         checkpointNumber,
         type: "shop",
         title: "Checkpoint shop",
-        message: "Use your coins on clothing items, or save them for later.",
+        message: "Choose from three random profile banner customizations at a 10% discount, or save your coins for later.",
       });
       return;
     }

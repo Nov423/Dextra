@@ -7,6 +7,12 @@ const DEXTRA_DEFAULT_COSMETICS = {
   equippedProfileBorder: "border-default",
 };
 
+const DEXTRA_PRICE_MULTIPLIER = 3;
+
+function dextraPrice(baseCost) {
+  return Math.round(Number(baseCost || 0) * DEXTRA_PRICE_MULTIPLIER);
+}
+
 const DEXTRA_BANNER_ITEMS = [
   ["gold", "Gold Spotlight", "#ffbf3d", "#061528", 80],
   ["blue", "Blue Wave", "#53c1ff", "#061528", 80],
@@ -23,7 +29,7 @@ const DEXTRA_BANNER_ITEMS = [
   type: "banner",
   title: `${title} Banner`,
   description: `${title} profile backdrop for your whale banner.`,
-  cost,
+  cost: dextraPrice(cost),
   categoryLabel: "Profile Banner",
   colors: [start, end],
 }));
@@ -44,7 +50,7 @@ const DEXTRA_BORDER_ITEMS = [
   type: "profileBorder",
   title: `${title} Profile Border`,
   description: `${title} ring for your profile picture.`,
-  cost,
+  cost: dextraPrice(cost),
   categoryLabel: "Profile Border",
   color,
 }));
@@ -75,7 +81,7 @@ const DEXTRA_PRIMARY_COLORS = [
   type: "whalePrimary",
   title: `${title} Whale`,
   description: `${title} primary whale color.`,
-  cost: 50 + (index % 5) * 10,
+  cost: dextraPrice(50 + (index % 5) * 10),
   categoryLabel: "Whale Primary Color",
   color,
 }));
@@ -106,7 +112,7 @@ const DEXTRA_SECONDARY_COLORS = [
   type: "whaleSecondary",
   title: `${title} Belly`,
   description: `${title} secondary whale color.`,
-  cost: 45 + (index % 5) * 10,
+  cost: dextraPrice(45 + (index % 5) * 10),
   categoryLabel: "Whale Secondary Color",
   color,
 }));
@@ -127,7 +133,7 @@ const DEXTRA_ACCESSORY_ITEMS = [
   type: "whaleAccessory",
   title,
   description: `${title} hanging from the whale's flipper.`,
-  cost,
+  cost: dextraPrice(cost),
   categoryLabel: "Whale Accessory",
   accessory,
 }));
@@ -148,7 +154,7 @@ const DEXTRA_NAME_EFFECT_ITEMS = [
   type: "nameEffect",
   title: `${title} Name Effect`,
   description: `${title} accent treatment for your display name.`,
-  cost,
+  cost: dextraPrice(cost),
   categoryLabel: "Name Effect",
   color,
 }));

@@ -1863,7 +1863,7 @@ body.feedback-open {
 
 .lesson-shop-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   padding: 14px;
@@ -1872,15 +1872,52 @@ body.feedback-open {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.lesson-shop-item div {
+.lesson-shop-preview {
+  min-height: 132px;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.lesson-shop-preview .shop-banner-picture {
+  width: 48px;
+  height: 48px;
+  font-size: 0.9rem;
+}
+
+.lesson-shop-preview .shop-banner-whale .whale-avatar {
+  width: min(120px, 100%);
+}
+
+.lesson-shop-preview .shop-banner-copy strong {
+  font-size: 1rem;
+}
+
+.lesson-shop-preview .shop-banner-copy span {
+  font-size: 0.74rem;
+}
+
+.lesson-shop-item-copy {
   min-width: 0;
   display: grid;
   gap: 4px;
 }
 
-.lesson-shop-item span {
+.lesson-shop-item-copy .eyebrow {
+  margin: 0 0 2px;
+}
+
+.lesson-shop-item-copy span {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.lesson-shop-discount {
+  color: var(--gold-soft);
+  font-weight: 800;
+}
+
+.lesson-shop-item s {
+  color: var(--muted);
 }
 
 .lesson-shop-empty {
