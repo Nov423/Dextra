@@ -107,6 +107,8 @@ body::before {
 .top-nav.app-nav {
   flex-wrap: nowrap;
   gap: clamp(4px, 0.7vw, 12px);
+  width: 100%;
+  justify-content: space-evenly;
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
@@ -2641,7 +2643,7 @@ body.feedback-open {
 
   .top-nav.app-nav {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: space-evenly;
   }
 
   .event-list {
