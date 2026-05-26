@@ -1,6 +1,7 @@
 const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+const LEARNING_DATA_VERSION = "20260525f";
 
 const COSMETICS = window.DEXTRA_COSMETICS;
 const SHOP_ITEMS = COSMETICS?.SHOP_ITEMS || [];
@@ -875,5 +876,39 @@ function bindHomeSession() {
   activateTab(initialTab, false);
 }
 
-sessionStorage.removeItem("currentUser");
-bindHomeSession();
+function loadLearningDataFallback() {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `learning-data.js?v=${LEARNING_DATA_VERSION}&retry=${Date.now()}`;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+}
+
+async function bootHomeSession() {
+  sessionStorage.removeItem("currentUser");
+
+  if (!window.DEXTRA_LEARNING_DATA) {
+    try {
+      await loadLearningDataFallback();
+    } catch {
+      const learningHub = document.getElementById("learningHub");
+      if (learningHub) {
+        learningHub.classList.remove("hidden");
+        learningHub.innerHTML = `
+          <article class="panel empty-state">
+            <p class="eyebrow">Load Error</p>
+            <h3>Refresh the page</h3>
+            <p>The learning data did not load in this browser.</p>
+          </article>
+        `;
+      }
+      return;
+    }
+  }
+
+  bindHomeSession();
+}
+
+bootHomeSession();
