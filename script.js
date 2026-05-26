@@ -643,35 +643,86 @@ function bindHomeSession() {
     }
 
     const categories = DEXTRA_LEARNING_DATA.testingCategories;
-    radarStage.querySelectorAll(".radar-point, .radar-label").forEach((node) => node.remove());
-
-    const centerX = 50;
-    const centerY = 50;
-    const radius = 33;
-
-    categories.forEach((category, index) => {
-      const value = getCategoryProgress(category);
+    const center = 260;
+    const radius = 160;
+    const labelRadius = 226;
+    const pointFor = (index, scale = 1) => {
       const angle = (-Math.PI / 2) + (index / categories.length) * Math.PI * 2;
-      const pointRadius = Math.max(7, radius * value);
-      const x = centerX + Math.cos(angle) * pointRadius;
-      const y = centerY + Math.sin(angle) * pointRadius;
-      const labelX = centerX + Math.cos(angle) * 45;
-      const labelY = centerY + Math.sin(angle) * 45;
+      return {
+        x: center + Math.cos(angle) * radius * scale,
+        y: center + Math.sin(angle) * radius * scale,
+      };
+    };
 
-      const point = document.createElement("span");
-      point.className = "radar-point";
-      point.style.left = `${x}%`;
-      point.style.top = `${y}%`;
-      point.title = category.title;
+    const ringMarkup = [0.25, 0.5, 0.75, 1]
+      .map((scale) => {
+        const points = categories
+          .map((_, index) => {
+            const point = pointFor(index, scale);
+            return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+          })
+          .join(" ");
+        return `<polygon class="radar-grid-ring" points="${points}" />`;
+      })
+      .join("");
 
-      const label = document.createElement("span");
-      label.className = "radar-label";
-      label.style.left = `${labelX}%`;
-      label.style.top = `${labelY}%`;
-      label.textContent = category.code;
+    const axisMarkup = categories
+      .map((_, index) => {
+        const point = pointFor(index, 1);
+        return `<line class="radar-axis" x1="${center}" y1="${center}" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" />`;
+      })
+      .join("");
 
-      radarStage.append(point, label);
+    const valuePoints = categories.map((category, index) => {
+      const value = getCategoryProgress(category);
+      const visualValue = Math.max(0.14, value);
+      return { ...pointFor(index, visualValue), value, category };
     });
+
+    const valuePolygon = valuePoints.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+    const markerMarkup = valuePoints
+      .map(
+        (point) => `
+          <circle class="radar-marker-halo" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="15" />
+          <circle class="radar-marker" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="8">
+            <title>${escapeHtml(point.category.title)}: ${Math.round(point.value * 100)}%</title>
+          </circle>
+        `
+      )
+      .join("");
+
+    const labelMarkup = categories
+      .map((category, index) => {
+        const angle = (-Math.PI / 2) + (index / categories.length) * Math.PI * 2;
+        const x = center + Math.cos(angle) * labelRadius;
+        const y = center + Math.sin(angle) * labelRadius;
+        const anchor = Math.abs(x - center) < 8 ? "middle" : x > center ? "start" : "end";
+        return `
+          <text
+            class="radar-svg-label"
+            x="${x.toFixed(1)}"
+            y="${y.toFixed(1)}"
+            text-anchor="${anchor}"
+            dominant-baseline="middle"
+          >${escapeHtml(category.code)}</text>
+        `;
+      })
+      .join("");
+
+    radarStage.innerHTML = `
+      <svg class="pokemon-radar" viewBox="0 0 520 520" role="img" aria-labelledby="testingRadarTitle testingRadarDesc">
+        <title id="testingRadarTitle">Testing category progress radar</title>
+        <desc id="testingRadarDesc">A six-axis radar chart showing progress across each testing category.</desc>
+        <g class="radar-grid">
+          ${ringMarkup}
+          ${axisMarkup}
+        </g>
+        <polygon class="radar-progress-fill" points="${valuePolygon}" />
+        <polygon class="radar-progress-line" points="${valuePolygon}" />
+        ${markerMarkup}
+        ${labelMarkup}
+      </svg>
+    `;
   }
 
   function activateTab(tabName, updateHash = true) {
