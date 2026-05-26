@@ -4,6 +4,11 @@ const SESSION_KEY = "dextraCurrentUser";
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 const ADMIN_USERNAME = "admin";
 const ADMIN_DISPLAY_USERNAME = "Admin";
+const ADMIN_FIXED_STATS = {
+  testsTaken: 67,
+  roleplaysDone: 42,
+  writtensGraded: 4,
+};
 const COSMETICS = window.DEXTRA_COSMETICS;
 
 function getStoredJson(key) {
@@ -50,6 +55,7 @@ function normalizeUser(user) {
     ...user,
   };
   COSMETICS?.normalizeUser(normalized);
+  applyAdminFixedStats(normalized);
   return normalized;
 }
 
@@ -100,6 +106,13 @@ function getItemsByType(type) {
 
 function isAdminUser(user) {
   return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function applyAdminFixedStats(user) {
+  if (isAdminUser(user)) {
+    Object.assign(user, ADMIN_FIXED_STATS);
+  }
+  return user;
 }
 
 function shouldIgnoreShortcut(event) {

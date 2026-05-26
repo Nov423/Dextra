@@ -6,6 +6,11 @@ const SHOP_CHECKPOINT = 10;
 const SHOP_PURCHASE_LIMIT = 3;
 const CHECKPOINT_SHOP_DISCOUNT_RATE = 0.1;
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+const ADMIN_FIXED_STATS = {
+  testsTaken: 67,
+  roleplaysDone: 42,
+  writtensGraded: 4,
+};
 const WHEEL_REWARDS = [
   { label: "10", coins: 10, weight: 60 },
   { label: "30", coins: 30, weight: 20 },
@@ -77,7 +82,7 @@ function normalizePracticeUser(user) {
   user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
   window.DEXTRA_COSMETICS?.normalizeUser(user);
   user.lastDailyWheelDate ||= "";
-  return user;
+  return applyAdminFixedStats(user);
 }
 
 function formatCoins(value) {
@@ -166,6 +171,13 @@ function renderWheelLabels() {
 
 function isAdminUser(user) {
   return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function applyAdminFixedStats(user) {
+  if (isAdminUser(user)) {
+    Object.assign(user, ADMIN_FIXED_STATS);
+  }
+  return user;
 }
 
 function shouldIgnoreShortcut(event) {
@@ -399,6 +411,7 @@ function escapeHtml(value) {
 }
 
 function persistUser(user) {
+  applyAdminFixedStats(user);
   const users = getJson(USERS_KEY);
   const index = users.findIndex((entry) => entry.email.toLowerCase() === user.email.toLowerCase());
   if (index >= 0) {
@@ -747,9 +760,12 @@ function bindLesson() {
   function finishLesson() {
     if (!progress.completedLessons.includes(lesson.virtualId)) {
       progress.completedLessons.push(lesson.virtualId);
-      user.testsTaken = (user.testsTaken || 0) + 1;
+      if (!isAdminUser(user)) {
+        user.testsTaken = (user.testsTaken || 0) + 1;
+      }
     }
     progress.activeChapterId = lessonNumber >= 10 ? getNextChapterId(category, chapter.id) : chapter.id;
+    applyAdminFixedStats(user);
     persistLessonUser();
     if (user.lastDailyWheelDate !== getLocalDateKey()) {
       renderWheelScreen();

@@ -4,6 +4,11 @@ const CLUB_CONFIRMATION_KEY = "dextraClubConfirmation";
 const SESSION_KEY = "dextraCurrentUser";
 const ADMIN_EMAIL = "123@gmail.com";
 const ADMIN_USERNAME = "admin";
+const ADMIN_FIXED_STATS = {
+  testsTaken: 67,
+  roleplaysDone: 42,
+  writtensGraded: 4,
+};
 
 const CODE_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*?";
 
@@ -121,6 +126,17 @@ function findUserByLogin(login, users = getUsers()) {
   });
 }
 
+function isAdminUser(user) {
+  return user?.role === "admin" || String(user?.email || "").toLowerCase() === ADMIN_EMAIL;
+}
+
+function applyAdminFixedStats(user) {
+  if (isAdminUser(user)) {
+    Object.assign(user, ADMIN_FIXED_STATS);
+  }
+  return user;
+}
+
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -166,7 +182,7 @@ function bindPasswordToggles() {
 }
 
 function createUserRecord(base) {
-  return {
+  return applyAdminFixedStats({
     testsTaken: 0,
     roleplaysDone: 0,
     writtensGraded: 0,
@@ -187,7 +203,7 @@ function createUserRecord(base) {
     ownedClothing: [],
     equippedClothing: "",
     ...base,
-  };
+  });
 }
 
 function bindSignUpPage() {
@@ -574,13 +590,19 @@ function bindSignInPage() {
       return;
     }
 
-    const user = findUserByLogin(login);
+    const users = getUsers();
+    const user = findUserByLogin(login, users);
 
     if (!user || user.password !== password) {
       markInvalid(signInLoginInput);
       markInvalid(signInPasswordInput);
       signInStatus.textContent = "Invalid email, username, or password.";
       return;
+    }
+
+    if (isAdminUser(user)) {
+      applyAdminFixedStats(user);
+      saveUsers(users);
     }
 
     setCurrentUser(user);

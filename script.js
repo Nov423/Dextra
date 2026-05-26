@@ -2,6 +2,11 @@ const SESSION_KEY = "dextraCurrentUser";
 const USERS_KEY = "dextraUsers";
 const ADMIN_EMAILS = new Set(["123@gmail.com"]);
 const LEARNING_DATA_VERSION = "20260525f";
+const ADMIN_FIXED_STATS = {
+  testsTaken: 67,
+  roleplaysDone: 42,
+  writtensGraded: 4,
+};
 
 const COSMETICS = window.DEXTRA_COSMETICS;
 const SHOP_ITEMS = COSMETICS?.SHOP_ITEMS || [];
@@ -48,7 +53,7 @@ function saveUsers(users) {
 }
 
 function normalizeUser(user) {
-  return {
+  const normalized = {
     testsTaken: 0,
     roleplaysDone: 0,
     writtensGraded: 0,
@@ -71,6 +76,7 @@ function normalizeUser(user) {
     equippedClothing: "",
     ...user,
   };
+  return applyAdminFixedStats(normalized);
 }
 
 function escapeHtml(value) {
@@ -90,6 +96,13 @@ function isAdminUser(user) {
   return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
 }
 
+function applyAdminFixedStats(user) {
+  if (isAdminUser(user)) {
+    Object.assign(user, ADMIN_FIXED_STATS);
+  }
+  return user;
+}
+
 function shouldIgnoreShortcut(event) {
   const target = event.target;
   return (
@@ -107,7 +120,7 @@ function normalizeCosmetics(user) {
   COSMETICS?.normalizeUser(user);
   user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
   user.equippedClothing = user.equippedClothing || "";
-  return user;
+  return applyAdminFixedStats(user);
 }
 
 function getInitials(name) {

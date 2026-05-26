@@ -1,5 +1,11 @@
 const USERS_KEY = "dextraUsers";
 const SESSION_KEY = "dextraCurrentUser";
+const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+const ADMIN_FIXED_STATS = {
+  testsTaken: 67,
+  roleplaysDone: 42,
+  writtensGraded: 4,
+};
 
 function getCurrentUser() {
   try {
@@ -19,6 +25,17 @@ function getUsers() {
 
 function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+function isAdminUser(user) {
+  return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function applyAdminFixedStats(user) {
+  if (isAdminUser(user)) {
+    Object.assign(user, ADMIN_FIXED_STATS);
+  }
+  return user;
 }
 
 function normalizeRecentRoleplays(user) {
@@ -106,7 +123,11 @@ function bindRoleplayReviewPage() {
     );
 
     if (userIndex !== -1) {
-      users[userIndex].roleplaysDone = Number(users[userIndex].roleplaysDone || 0) + 1;
+      if (isAdminUser(users[userIndex])) {
+        applyAdminFixedStats(users[userIndex]);
+      } else {
+        users[userIndex].roleplaysDone = Number(users[userIndex].roleplaysDone || 0) + 1;
+      }
       const recent = normalizeRecentRoleplays(users[userIndex]).filter((id) => id !== eventConfig.id);
       users[userIndex].recentRoleplays = [eventConfig.id, ...recent].slice(0, 6);
       saveUsers(users);

@@ -9,9 +9,9 @@ const seededUsers = [
     password: "12345678",
     plan: "single",
     role: "admin",
-    testsTaken: 0,
-    roleplaysDone: 0,
-    writtensGraded: 0,
+    testsTaken: 67,
+    roleplaysDone: 42,
+    writtensGraded: 4,
   },
 ];
 

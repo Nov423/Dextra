@@ -2,6 +2,11 @@
   const SESSION_KEY = "dextraCurrentUser";
   const USERS_KEY = "dextraUsers";
   const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+  const ADMIN_FIXED_STATS = {
+    testsTaken: 67,
+    roleplaysDone: 42,
+    writtensGraded: 4,
+  };
 
   function readJson(storage, key, fallback) {
     try {
@@ -43,6 +48,13 @@
     return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
   }
 
+  function applyAdminFixedStats(user) {
+    if (isAdminUser(user)) {
+      Object.assign(user, ADMIN_FIXED_STATS);
+    }
+    return user;
+  }
+
   function findCurrentUserIndex(users, sessionUser) {
     if (!sessionUser) {
       return -1;
@@ -66,7 +78,7 @@
     user.ownedCosmetics = Array.isArray(user.ownedCosmetics) ? user.ownedCosmetics : [];
     user.ownedClothing = Array.isArray(user.ownedClothing) ? user.ownedClothing : [];
     user.lastDailyWheelDate ||= "";
-    return user;
+    return applyAdminFixedStats(user);
   }
 
   function resetPurchasedCosmetics(user) {
@@ -166,6 +178,7 @@
         entry.testingProgress = {};
         entry.lastDailyWheelDate = "";
         resetPurchasedCosmetics(entry);
+        applyAdminFixedStats(entry);
       });
       window.location.reload();
     }

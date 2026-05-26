@@ -1,5 +1,11 @@
 const USERS_KEY = "dextraUsers";
 const SESSION_KEY = "dextraCurrentUser";
+const ADMIN_EMAILS = new Set(["123@gmail.com"]);
+const ADMIN_FIXED_STATS = {
+  testsTaken: 67,
+  roleplaysDone: 42,
+  writtensGraded: 4,
+};
 
 const PREPARED_TYPES = {
   "pitch-deck": {
@@ -36,6 +42,17 @@ function getUsers() {
 
 function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+function isAdminUser(user) {
+  return user?.role === "admin" || ADMIN_EMAILS.has(String(user?.email || "").toLowerCase());
+}
+
+function applyAdminFixedStats(user) {
+  if (isAdminUser(user)) {
+    Object.assign(user, ADMIN_FIXED_STATS);
+  }
+  return user;
 }
 
 function bindPreparedReviewPage() {
@@ -116,7 +133,11 @@ function bindPreparedReviewPage() {
     );
 
     if (userIndex !== -1) {
-      users[userIndex].writtensGraded = Number(users[userIndex].writtensGraded || 0) + 1;
+      if (isAdminUser(users[userIndex])) {
+        applyAdminFixedStats(users[userIndex]);
+      } else {
+        users[userIndex].writtensGraded = Number(users[userIndex].writtensGraded || 0) + 1;
+      }
       saveUsers(users);
     }
 
