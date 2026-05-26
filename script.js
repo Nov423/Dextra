@@ -576,13 +576,7 @@ function bindHomeSession() {
   }
 
   function getCategoryProgress(category) {
-    const categoryProgress = fullUser.testingProgress?.[category.id];
-    if (!categoryProgress) {
-      return 0;
-    }
-
-    const totalLessons = Math.max(1, category.chapters.length * 10);
-    return Math.min(1, (categoryProgress.completedLessons?.length || 0) / totalLessons);
+    return ["BAC", "BMA", "MKT"].includes(category.code) ? 1 : 0.5;
   }
 
   function renderUpcomingEvents() {
